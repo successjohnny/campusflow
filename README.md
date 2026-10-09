@@ -1,20 +1,20 @@
 # CampusFlow — Campus Helpdesk Ticket Management System
 
-CampusFlow is a Python-based command-line application developed to help Learn2Earn manage technical support requests efficiently.
+CampusFlow is a Python-based command-line application developed to help Learn2Earn manage campus technical support requests efficiently.
 
-The system allows users to create support tickets, calculate priorities automatically, manage staff assignments, track ticket resolution, and generate helpdesk reports.
+The system allows users to create support tickets, calculate priorities automatically, assign staff members, manage ticket resolution, view priority queues, and generate helpdesk reports.
 
-CampusFlow is developed collaboratively by two engineers as part of the **Learn2Earn Python Engineering Sprint**.
+CampusFlow was developed collaboratively by two engineers as part of the **Learn2Earn Python Engineering Sprint**.
 
 ## Project Objectives
 
 The objectives of CampusFlow are to:
 
 - Provide a structured system for recording campus technical support issues.
-- Automatically calculate ticket priority based on urgency and the number of affected users.
+- Automatically calculate ticket priority based on urgency and affected users.
 - Prevent invalid ticket information from entering the system.
 - Support staff assignment and ticket resolution tracking.
-- Organize unresolved tickets according to priority.
+- Organize open tickets according to priority.
 - Generate accurate helpdesk reports.
 - Preserve ticket information using JSON storage.
 - Demonstrate collaborative software development using Git and GitHub.
@@ -23,109 +23,128 @@ The objectives of CampusFlow are to:
 
 - **Python 3** — Core programming language.
 - **JSON** — Persistent ticket storage.
-- **unittest** — Automated testing.
+- **unittest** — Automated testing framework.
+- **pytest** — Additional test execution tool.
 - **Git** — Version control.
-- **GitHub** — Team collaboration, pull requests, and code reviews.
+- **GitHub** — Collaboration, pull requests, and code reviews.
 - **Visual Studio Code** — Development environment.
 
-The current implementation uses Python's standard library and does not require third-party dependencies.
+The application itself uses Python's standard library and does not require third-party runtime dependencies.
 
 ## Key Features
 
 ### 1. Ticket Creation and Validation — Implemented
 
-Users can create helpdesk tickets containing:
+Each support ticket contains eight fields:
 
-- Unique ticket ID.
-- Ticket title.
-- Category.
-- Urgency level.
-- Number of affected users.
-- Calculated priority.
-- Ticket status.
-- Assigned staff member.
+- `id`
+- `title`
+- `category`
+- `urgency`
+- `affected_users`
+- `priority`
+- `status`
+- `assigned_to`
 
 Supported categories are `Network`, `Hardware`, `Software`, and `Other`.
 
 Supported urgency levels are `low`, `medium`, and `high`.
 
-The system validates inputs before creating a ticket.
+The system validates ticket information before creating a record.
 
 ### 2. Automatic Priority Calculation — Implemented
 
-CampusFlow automatically calculates priority using the following rules, evaluated in order:
+Ticket priority is calculated using the following rules, evaluated in order:
 
 | Condition | Priority |
 |---|---|
-| High urgency AND at least 10 affected users | Critical |
-| High urgency OR at least 10 affected users | High |
-| Medium urgency OR at least 3 affected users | Medium |
-| Otherwise | Low |
+| High urgency AND at least 10 affected users | critical |
+| High urgency OR at least 10 affected users | high |
+| Medium urgency OR at least 3 affected users | medium |
+| Otherwise | low |
+
+The first matching condition determines the ticket priority.
 
 ### 3. Unique Ticket Identification — Implemented
 
-Each ticket receives a unique identifier such as:
+Tickets receive unique IDs such as `T001`, `T002`, and `T003`.
 
-- `T001`
-- `T002`
-- `T003`
-
-Ticket IDs remain unique when previously saved tickets are reloaded.
+New IDs are generated using the highest existing ticket number, helping preserve uniqueness after saved tickets are reloaded.
 
 ### 4. JSON Data Persistence — Implemented
 
-CampusFlow stores tickets in:
+Ticket records are saved to:
 
 `data/tickets.json`
 
 The system:
 
-- Saves ticket records in JSON format.
-- Reloads existing records.
-- Starts with an empty ticket list when the storage file is missing.
-- Detects malformed JSON.
-- Preserves ticket IDs across application restarts.
+- Saves tickets in JSON format.
+- Reloads saved tickets when the application starts.
+- Uses an empty ticket list if the storage file does not exist.
+- Detects malformed JSON and reports an error.
+- Preserves ticket information across application restarts.
 
 The runtime JSON file is excluded from Git tracking.
 
-### 5. Staff Assignment — Under Development
+### 5. Staff Assignment — Implemented
 
-This feature will allow users to assign tickets to staff members and reject invalid assignment requests.
+Users can assign tickets to staff members.
 
-### 6. Ticket Status Management — Under Development
+The application rejects empty staff names and invalid ticket IDs.
 
-The planned workflow is:
+Resolved tickets cannot be reassigned until they have been reopened.
+
+### 6. Ticket Status Management — Implemented
+
+The normal ticket workflow is:
 
 `open → in_progress → resolved`
 
-Tickets must be assigned before progressing. Resolved tickets require explicit reopening before further modification.
+A ticket must be assigned before moving to `in_progress`.
 
-### 7. Priority Work Queue — Under Development
+Resolved tickets can be explicitly reopened by changing their status to `open`.
 
-The work queue will display unresolved tickets ordered by priority:
+Invalid status transitions are rejected.
+
+### 7. Priority Work Queue — Implemented
+
+The priority queue displays open tickets sorted in the following order:
 
 1. Critical
 2. High
 3. Medium
 4. Low
 
-Tickets with equal priority will be ordered by ticket ID.
+Tickets with equal priority are ordered by their numeric ticket IDs.
 
-### 8. Helpdesk Reports — Under Development
+### 8. Helpdesk Reports — Implemented
 
-Reports will summarize:
+CampusFlow generates reports containing:
 
-- Total tickets.
-- Tickets by status.
-- Tickets by priority.
+- Total number of tickets.
+- Ticket counts by status.
+- Ticket counts by priority.
 
-The reporting feature will also handle an empty ticket list.
+The reporting system also handles an empty ticket list.
 
-### 9. Interactive Command-Line Interface — Partially Implemented
+### 9. Interactive Command-Line Interface — Implemented
 
-The application provides a command-line menu for managing tickets.
+The application provides the following menu:
 
-The final integrated menu is planned to support ticket creation, listing, details, assignment, status changes, reopening, work queue viewing, and reporting.
+```text
+===== CAMPUSFLOW HELPDESK =====
+1. Create Ticket
+2. View All Tickets
+3. View Ticket Details
+4. Assign Ticket
+5. Update Ticket Status
+6. View Priority Queue
+7. Generate Reports
+0. Exit
+```
+
+The CLI connects the ticket management, workflow, reporting, and storage modules.
 
 ## Example Ticket Record
 
@@ -149,16 +168,20 @@ campusflow/
 │
 ├── main.py
 ├── tickets.py
-├── workflow.py
-├── reports.py
 ├── storage.py
 ├── README.md
 ├── .gitignore
 │
+├── campusflow/
+│   ├── __init__.py
+│   ├── workflow.py
+│   └── reports.py
+│
 ├── tests/
 │   ├── test_tickets.py
 │   ├── test_storage.py
-│   └── ... additional tests
+│   ├── test_workflow.py
+│   └── test_reports.py
 │
 ├── docs/
 │   ├── design-decisions.md
@@ -168,7 +191,7 @@ campusflow/
     └── tickets.json
 ```
 
-Some modules are still being developed or integrated. The `data/tickets.json` file is created during application use and is not committed to GitHub.
+The `data/tickets.json` file is generated during application use and is not committed to GitHub.
 
 ## Installation and Setup
 
@@ -179,7 +202,7 @@ git clone https://github.com/successjohnny/campusflow.git
 cd campusflow
 ```
 
-### Step 2 — Check Python Installation
+### Step 2 — Verify Python
 
 ```bash
 python3 --version
@@ -193,71 +216,71 @@ Python 3 is required.
 python3 main.py
 ```
 
-### Step 4 — Follow the Menu
+### Step 4 — Use the Menu
 
-Select the available options to create or view tickets.
+Select the required option to create tickets, view tickets, assign staff, update statuses, display the priority queue, or generate reports.
 
-Additional options will become available after the final integration.
+Enter `0` to exit.
 
 ## Running Automated Tests
 
-CampusFlow uses Python's built-in `unittest` framework.
+CampusFlow includes automated tests written using Python's built-in `unittest` framework.
 
-Run all tests from the project root:
+Run the test suite using:
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-### Current Verified Test Results
+Alternatively, install pytest in a virtual environment:
 
-**John Ikwuobe — Engineer A**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install pytest
+python -m pytest -q
+```
 
-- Automated tests executed: 20
-- Tests passed: 20
-- Test failures: 0
-- Result: SUCCESS
+### Verified Integrated Test Results
 
-Verified test areas include:
+**38 tests passed, 0 failed.**
 
-- Ticket creation.
-- Input validation.
-- Priority calculation.
-- Priority boundary conditions.
-- Category and urgency normalization.
+The integrated test suite was successfully executed after merging both engineers' contributions and updating the command-line interface.
+
+Test coverage includes:
+
+- Ticket creation and validation.
+- Priority calculation and boundary conditions.
 - Unique ticket IDs.
+- Category and urgency normalization.
 - JSON saving and loading.
-- Missing JSON file handling.
-- Corrupted JSON detection.
-- Unique IDs after reloading saved data.
-
-These results were obtained on the `feature/tickets` branch before final integration.
-
-The full test suite will be executed again after both engineers' contributions are merged.
+- Missing and corrupted JSON files.
+- Staff assignment.
+- Ticket status transitions and reopening.
+- Priority queue ordering.
+- Helpdesk report generation.
 
 ## Input Validation and Error Handling
 
-CampusFlow rejects invalid ticket information, including:
+CampusFlow rejects invalid operations, including:
 
 - Blank ticket titles.
 - Unsupported categories.
 - Invalid urgency values.
 - Zero or negative affected-user counts.
-- Text instead of an integer.
-- Decimal affected-user values.
-- Boolean affected-user values.
+- Text, decimal, or Boolean affected-user values.
+- Empty staff names.
+- Invalid ticket IDs for workflow operations.
+- Invalid ticket status transitions.
+- Attempts to begin work without an assigned staff member.
 
-The system raises `ValueError` when invalid input is detected.
-
-Validation is performed before adding tickets to the list, preventing invalid records from modifying application data.
+The application raises `ValueError` for invalid operations and displays understandable messages through the CLI.
 
 ## Team Collaboration and Responsibilities
 
-CampusFlow is developed by two engineers using separate GitHub feature branches.
+### Engineer A — John Ikwuobe
 
-### John Ikwuobe — Engineer A
-
-**Role: Ticket Management, Priority Calculation, and Data Persistence**
+**Role: Ticket Management, Priority Calculation, Persistence, and CLI Integration**
 
 Responsibilities:
 
@@ -266,17 +289,15 @@ Responsibilities:
 - Calculate ticket priorities.
 - Generate unique ticket IDs.
 - Implement JSON persistence.
-- Develop automated unit tests.
-- Contribute to command-line integration.
-- Participate in documentation, testing, and code reviews.
+- Write automated tests.
+- Integrate the CLI with workflow and reporting modules.
+- Participate in testing, documentation, and code reviews.
 
-**Verified contribution:** 20 automated tests passed successfully.
+GitHub: https://github.com/successjohnny
 
-**GitHub:** https://github.com/successjohnny
+### Engineer B — Idi Mohammed Mohammed
 
-### Engineer B — Workflow and Reporting
-
-**Role: Ticket Workflow, Staff Assignment, and Reporting**
+**Role: Ticket Workflow and Reporting**
 
 Responsibilities:
 
@@ -284,30 +305,26 @@ Responsibilities:
 - Manage ticket status transitions.
 - Support ticket reopening.
 - Develop the priority work queue.
-- Generate ticket summary reports.
+- Generate helpdesk reports.
 - Write automated workflow and reporting tests.
-- Participate in integration, documentation, and peer reviews.
-
-Both engineers collaborate to ensure the completed application satisfies the project requirements.
+- Participate in integration, documentation, and code reviews.
 
 ## GitHub Collaboration Workflow
 
-The team follows this development process:
+The team used Git and GitHub to coordinate development.
 
-1. Create separate feature branches.
-2. Implement assigned application features.
-3. Write and execute automated tests.
-4. Commit changes with descriptive messages.
-5. Push changes to GitHub.
-6. Create pull requests.
-7. Review each other's code and provide substantive feedback.
-8. Resolve issues identified during review.
-9. Approve and merge reviewed pull requests.
-10. Run the integrated test suite on the `main` branch.
+The workflow included:
 
-### Engineer A Branch
-
-`feature/tickets`
+1. Creating separate feature branches.
+2. Implementing assigned modules.
+3. Writing automated tests.
+4. Committing and pushing changes.
+5. Creating pull requests.
+6. Reviewing each other's code.
+7. Resolving integration conflicts.
+8. Merging the contributions.
+9. Running the complete test suite.
+10. Publishing the integrated project on `main`.
 
 ### Repository
 
@@ -315,27 +332,27 @@ https://github.com/successjohnny/campusflow
 
 ## Design Decisions
 
-The project documents agreed architectural decisions and function contracts in:
+The project's architecture and function contracts are documented in:
 
 `docs/design-decisions.md`
 
-The design covers ticket data structures, validation rules, function interfaces, persistence, testing, and collaboration.
+The document covers ticket structures, validation rules, priority calculations, workflow restrictions, JSON persistence, testing, and collaboration decisions.
 
 ## AI-Assisted Learning
 
-AI tools were used as learning aids to explore Python concepts and evaluate possible implementations.
+AI tools were used to support learning, debugging, and understanding Python concepts.
 
-The engineers independently verify AI-generated explanations and suggestions through experiments, code inspection, and automated testing.
-
-Learning topics include:
+Learning topics included:
 
 - Conditional logic and priority calculation.
 - JSON serialization and deserialization.
-- Python exception handling.
+- Exception handling.
 - Input validation and data integrity.
 - Unit testing and debugging.
 
-The learning evidence is recorded in:
+AI suggestions were evaluated against the assignment requirements and verified through code inspection, experiments, and automated tests.
+
+The learning evidence is documented in:
 
 `docs/ai-learning-log.md`
 
@@ -343,18 +360,18 @@ The learning evidence is recorded in:
 
 During priority calculation development, an earlier AI suggestion used 20 affected users as the critical-priority threshold.
 
-After comparing this suggestion with the official project requirements, John Ikwuobe identified that the correct threshold was 10 affected users.
+After checking the project requirements, Engineer A identified that the correct threshold was 10 affected users.
 
 The implementation was corrected and verified using automated tests.
 
-This demonstrates the importance of checking AI suggestions against authoritative project requirements.
+This demonstrated the importance of independently verifying AI-generated suggestions.
 
 ## Future Improvements
 
-Potential future enhancements include:
+Possible future enhancements include:
 
 - SQLite or PostgreSQL database integration.
-- A web interface using FastAPI.
+- A FastAPI web interface.
 - Staff authentication and role-based access.
 - Ticket search and filtering.
 - Ticket activity history.
@@ -363,17 +380,20 @@ Potential future enhancements include:
 
 ## Project Status
 
-**Development and integration in progress.**
+**Core implementation and CLI integration completed.**
 
-John Ikwuobe's ticket creation, validation, priority calculation, and JSON persistence modules have been implemented and tested successfully.
+Both engineers' modules have been integrated into the application.
 
-Workflow, reporting, and complete CLI integration are pending completion and verification.
+All 38 automated tests passed during final integration testing.
+
+The completed code has been pushed to the GitHub `main` branch.
 
 ## Acknowledgement
 
 Developed as a collaborative Python engineering project for the **Learn2Earn Python Engineering Sprint**.
 
 **Contributors:**
+
 - John Ikwuobe — Engineer A
 - Idi Mohammed Mohammed — Engineer B
 
