@@ -6,23 +6,32 @@ DATA_FILE = Path(__file__).resolve().parent / "data" / "tickets.json"
 
 
 def load_tickets(file_path=DATA_FILE):
-    """Load tickets from JSON storage."""
+    """Load saved tickets from JSON."""
+
     path = Path(file_path)
 
     if not path.exists():
         return []
 
-    with path.open("r", encoding="utf-8") as file:
-        data = json.load(file)
+    try:
+        with path.open("r", encoding="utf-8") as file:
+            tickets = json.load(file)
+    except json.JSONDecodeError as error:
+        raise ValueError(
+            "Ticket storage contains invalid JSON"
+        ) from error
 
-    if not isinstance(data, list):
-        raise ValueError("Ticket storage must contain a list")
+    if not isinstance(tickets, list):
+        raise ValueError(
+            "Ticket storage must contain a list"
+        )
 
-    return data
+    return tickets
 
 
 def save_tickets(tickets, file_path=DATA_FILE):
     """Save tickets to JSON storage."""
+
     path = Path(file_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
