@@ -4,3 +4,10 @@ __pycache__/
 .env
 data/tickets.json
 .venv/
+
+# Learning experiment sample data
+experiments/sample_tickets.json
+
+# Python cache
+__pycache__/
+*.pyc
