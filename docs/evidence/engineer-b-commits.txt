@@ -1,0 +1,64 @@
+Commit: abd03aa
+Date: 2026-10-14
+Subject: fix: preserve CLI exit message compatibility
+ main.py | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+Commit: d0d9c2c
+Date: 2026-10-14
+Subject: feat: integrate audited ticket assignment and status workflow
+ campusflow/workflow_service.py | 149 +++++++++++++++++++++++
+ main.py                        | 261 +++++++++++++++++++++++++++++++++++------
+ tests/test_workflow_service.py | 235 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 607 insertions(+), 38 deletions(-)
+
+Commit: f72c1b9
+Date: 2026-10-14
+Subject: feat: integrate ticket creation with schema v2 and audit logging
+ campusflow/ticket_service.py    |  98 ++++++++++++++++++++++++++++++
+ main.py                         | 128 ++++++++++++++++++----------------------
+ tests/test_knowledge_lab_cli.py |   9 ++-
+ tests/test_ticket_service.py    | 121 +++++++++++++++++++++++++++++++++++++
+ 4 files changed, 284 insertions(+), 72 deletions(-)
+
+Commit: 7658b9f
+Date: 2026-10-14
+Subject: feat: integrate Knowledge Lab into CLI
+ main.py                         | 58 +++++++++++++++++++++++++++++++++++++----
+ tests/test_knowledge_lab_cli.py | 53 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 106 insertions(+), 5 deletions(-)
+
+Commit: d53ea88
+Date: 2026-10-14
+Subject: feat: add interactive Knowledge Lab quiz
+ campusflow/knowledge_lab.py | 178 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/test_knowledge_lab.py | 147 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 325 insertions(+)
+
+Commit: 3fcea83
+Date: 2026-10-14
+Subject: feat: add enhanced ticket analytics
+ campusflow/reports.py          | 166 +++++++++++++++++++++++-----
+ tests/test_enhanced_reports.py | 240 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 382 insertions(+), 24 deletions(-)
+
+Commit: 73c2201
+Date: 2026-10-14
+Subject: feat: add SLA attention queue
+ campusflow/reports.py             |  72 ++++++++++++++--
+ tests/test_sla_attention_queue.py | 176 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 241 insertions(+), 7 deletions(-)
+
+Commit: 2154325
+Date: 2026-10-14
+Subject: feat: add duplicate ticket detection
+ campusflow/duplicates.py |  44 +++++++++++++++
+ tests/test_duplicates.py | 137 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 181 insertions(+)
+
+Commit: 8733102
+Date: 2026-10-14
+Subject: feat: add audit event recording and ticket history
+ campusflow/audit.py | 102 ++++++++++++++++++++++++
+ tests/test_audit.py | 222 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 324 insertions(+)
