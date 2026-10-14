@@ -11,3 +11,5 @@ experiments/sample_tickets.json
 # Python cache
 __pycache__/
 *.pyc
+# Local Knowledge Lab assessment sessions
+data/knowledge_lab_sessions/

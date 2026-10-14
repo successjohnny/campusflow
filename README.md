@@ -1,60 +1,70 @@
-# CampusFlow — Campus Helpdesk Ticket Management System
+# CampusFlow Pro — Campus Helpdesk Ticket Management System
 
-CampusFlow is a Python-based command-line application developed to help Learn2Earn manage campus technical support requests efficiently.
+CampusFlow Pro is a Python-based command-line application developed as part of the **Learn2Earn Python Engineering Sprint**.
 
-The system allows users to create support tickets, calculate priorities automatically, assign staff members, manage ticket resolution, view priority queues, and generate helpdesk reports.
+The system helps manage campus technical support requests through ticket creation, automatic prioritization, staff assignment, ticket lifecycle management, Service Level Agreement (SLA) monitoring, audit logging, duplicate detection, reporting, and an interactive Engineering Knowledge Lab.
 
-CampusFlow was developed collaboratively by two engineers as part of the **Learn2Earn Python Engineering Sprint**.
+The project was developed collaboratively by **three engineers**:
+
+- John Ikwuobe — Engineer A
+- Idi Mohammed Mohammed — Engineer B
+- Moses Ochekwu — Engineer C
+
+**Repository:** https://github.com/successjohnny/campusflow
 
 ## Project Objectives
 
-The objectives of CampusFlow are to:
+CampusFlow Pro aims to:
 
-- Provide a structured system for recording campus technical support issues.
-- Automatically calculate ticket priority based on urgency and affected users.
-- Prevent invalid ticket information from entering the system.
-- Support staff assignment and ticket resolution tracking.
-- Organize open tickets according to priority.
-- Generate accurate helpdesk reports.
-- Preserve ticket information using JSON storage.
-- Demonstrate collaborative software development using Git and GitHub.
+- Record campus technical support requests in a structured format.
+- Calculate ticket priorities automatically.
+- Validate inputs and prevent invalid records.
+- Assign tickets to staff and track resolution.
+- Monitor SLA deadlines and overdue tickets.
+- Maintain an auditable history of ticket operations.
+- Identify potentially duplicate unresolved tickets.
+- Organize work through priority and SLA attention queues.
+- Generate helpdesk reports and operational analytics.
+- Preserve data using versioned JSON storage.
+- Assess engineering understanding through the Knowledge Lab.
+- Demonstrate teamwork, testing, and GitHub collaboration.
 
 ## Technologies Used
 
-- **Python 3** — Core programming language.
-- **JSON** — Persistent ticket storage.
-- **unittest** — Automated testing framework.
-- **pytest** — Additional test execution tool.
+- **Python 3** — Application development.
+- **JSON** — Ticket, audit, and quiz session persistence.
+- **unittest** — Built-in automated testing framework.
+- **pytest** — Test execution.
 - **Git** — Version control.
-- **GitHub** — Collaboration, pull requests, and code reviews.
+- **GitHub** — Pull requests and collaboration.
 - **Visual Studio Code** — Development environment.
 
-The application itself uses Python's standard library and does not require third-party runtime dependencies.
+The application uses Python's standard library for its runtime functionality. `pytest` is used for development testing.
 
 ## Key Features
 
-### 1. Ticket Creation and Validation — Implemented
+### 1. Ticket Creation and Validation
 
-Each support ticket contains eight fields:
+Users can create support tickets with a title, category, urgency, and number of affected users.
 
-- `id`
-- `title`
-- `category`
-- `urgency`
-- `affected_users`
-- `priority`
-- `status`
-- `assigned_to`
+Supported categories:
 
-Supported categories are `Network`, `Hardware`, `Software`, and `Other`.
+- Network
+- Hardware
+- Software
+- Other
 
-Supported urgency levels are `low`, `medium`, and `high`.
+Supported urgency levels:
 
-The system validates ticket information before creating a record.
+- low
+- medium
+- high
 
-### 2. Automatic Priority Calculation — Implemented
+The system validates information before creating tickets and generates unique IDs such as `T001`, `T002`, and `T003`.
 
-Ticket priority is calculated using the following rules, evaluated in order:
+### 2. Automatic Priority Calculation
+
+Priority is calculated using the following rules, evaluated in order:
 
 | Condition | Priority |
 |---|---|
@@ -63,77 +73,155 @@ Ticket priority is calculated using the following rules, evaluated in order:
 | Medium urgency OR at least 3 affected users | medium |
 | Otherwise | low |
 
-The first matching condition determines the ticket priority.
+The first matching rule determines the ticket's priority.
 
-### 3. Unique Ticket Identification — Implemented
+### 3. Ticket Workflow Management
 
-Tickets receive unique IDs such as `T001`, `T002`, and `T003`.
-
-New IDs are generated using the highest existing ticket number, helping preserve uniqueness after saved tickets are reloaded.
-
-### 4. JSON Data Persistence — Implemented
-
-Ticket records are saved to:
-
-`data/tickets.json`
-
-The system:
-
-- Saves tickets in JSON format.
-- Reloads saved tickets when the application starts.
-- Uses an empty ticket list if the storage file does not exist.
-- Detects malformed JSON and reports an error.
-- Preserves ticket information across application restarts.
-
-The runtime JSON file is excluded from Git tracking.
-
-### 5. Staff Assignment — Implemented
-
-Users can assign tickets to staff members.
-
-The application rejects empty staff names and invalid ticket IDs.
-
-Resolved tickets cannot be reassigned until they have been reopened.
-
-### 6. Ticket Status Management — Implemented
-
-The normal ticket workflow is:
+The normal ticket lifecycle is:
 
 `open → in_progress → resolved`
 
-A ticket must be assigned before moving to `in_progress`.
+A resolved ticket can be reopened:
 
-Resolved tickets can be explicitly reopened by changing their status to `open`.
+`resolved → open`
 
-Invalid status transitions are rejected.
+Workflow rules include:
 
-### 7. Priority Work Queue — Implemented
+- Staff names must be valid.
+- A ticket must be assigned before work begins.
+- Invalid status transitions are rejected.
+- Resolved tickets must be reopened before further active work.
+- Reopening begins a new SLA cycle.
 
-The priority queue displays open tickets sorted in the following order:
+### 4. SLA Tracking and Escalation
+
+CampusFlow Pro calculates ticket deadlines based on priority.
+
+| Priority | SLA Duration |
+|---|---|
+| Critical | 60 minutes |
+| High | 240 minutes |
+| Medium | 1,440 minutes |
+| Low | 2,880 minutes |
+
+The system uses timezone-aware UTC timestamps.
+
+An unresolved ticket is overdue when the current time is later than its SLA deadline.
+
+Overdue escalation is designed to be idempotent: repeated checks do not create duplicate escalation events for the same ticket in the same SLA cycle.
+
+### 5. Audit Event Recording
+
+The system records significant ticket operations.
+
+Supported events include:
+
+- `CREATE`
+- `ASSIGN`
+- `START`
+- `RESOLVE`
+- `REOPEN`
+- `ESCALATE`
+
+Audit records provide a history of ticket activity and support accountability and troubleshooting.
+
+### 6. Duplicate Ticket Detection
+
+CampusFlow Pro checks for potentially duplicate unresolved tickets using normalized titles and categories.
+
+When a possible duplicate is detected, the CLI asks the user whether to continue creating the ticket.
+
+The system does not automatically delete or merge tickets.
+
+### 7. Priority Queue
+
+The original priority queue displays open tickets in this order:
 
 1. Critical
 2. High
 3. Medium
 4. Low
 
-Tickets with equal priority are ordered by their numeric ticket IDs.
+Tickets with equal priority are ordered by numeric ticket ID.
 
-### 8. Helpdesk Reports — Implemented
+### 8. SLA Attention Queue
 
-CampusFlow generates reports containing:
+The SLA attention queue focuses on unresolved tickets in the `open` and `in_progress` states.
 
-- Total number of tickets.
-- Ticket counts by status.
-- Ticket counts by priority.
+Tickets are ordered by:
 
-The reporting system also handles an empty ticket list.
+1. Overdue status.
+2. Earliest SLA deadline.
+3. Numeric ticket ID.
 
-### 9. Interactive Command-Line Interface — Implemented
+This helps identify tickets requiring urgent operational attention.
 
-The application provides the following menu:
+### 9. Reporting and Analytics
+
+CampusFlow Pro supports basic and enhanced reporting.
+
+Basic reports include ticket counts by status and priority.
+
+Enhanced reporting uses ticket and audit data to provide additional operational information, including SLA-related analysis.
+
+### 10. JSON Persistence and Data Integrity
+
+Application data is stored in:
+
+`data/tickets.json`
+
+The versioned storage structure is:
+
+```json
+{
+  "schema_version": 2,
+  "tickets": [],
+  "events": []
+}
+```
+
+Storage functionality includes:
+
+- Loading saved data.
+- Validating the expected schema.
+- Detecting malformed JSON.
+- Validating timestamps.
+- Preserving ticket and audit records.
+- Using atomic file replacement to reduce partial-write risks.
+
+Runtime data files are excluded from Git tracking.
+
+### 11. Engineering Knowledge Lab
+
+The Engineering Knowledge Lab is accessible through **menu option 8**.
+
+It contains ten multiple-choice questions covering:
+
+- SLA concepts.
+- Ticket priorities.
+- Audit logging.
+- Duplicate detection.
+- Overdue tickets.
+- Timestamps.
+- SLA reopening cycles.
+- Atomic JSON saving.
+- SLA attention queues.
+- Idempotent escalation.
+
+The Knowledge Lab provides feedback, explanations, scores, and percentages.
+
+Completed quiz sessions are saved separately under:
+
+`data/knowledge_lab_sessions/`
+
+Each session has a unique ID and records the participant, completion timestamp, answers, and result.
+
+### 12. Interactive Command-Line Interface
+
+The application presents the following main menu:
 
 ```text
-===== CAMPUSFLOW HELPDESK =====
+===== CAMPUSFLOW PRO HELPDESK =====
 1. Create Ticket
 2. View All Tickets
 3. View Ticket Details
@@ -141,31 +229,16 @@ The application provides the following menu:
 5. Update Ticket Status
 6. View Priority Queue
 7. Generate Reports
+8. Knowledge Lab
 0. Exit
 ```
 
-The CLI connects the ticket management, workflow, reporting, and storage modules.
-
-## Example Ticket Record
-
-```python
-{
-    "id": "T001",
-    "title": "Campus Wi-Fi is down",
-    "category": "Network",
-    "urgency": "high",
-    "affected_users": 15,
-    "priority": "critical",
-    "status": "open",
-    "assigned_to": None
-}
-```
+The CLI integrates the ticket management, workflow, reporting, audit, SLA, duplicate detection, and Knowledge Lab components.
 
 ## Project Structure
 
 ```text
 campusflow/
-│
 ├── main.py
 ├── tickets.py
 ├── storage.py
@@ -174,24 +247,29 @@ campusflow/
 │
 ├── campusflow/
 │   ├── __init__.py
+│   ├── audit.py
+│   ├── duplicates.py
+│   ├── knowledge_lab.py
+│   ├── reports.py
+│   ├── sla.py
+│   ├── ticket_service.py
 │   ├── workflow.py
-│   └── reports.py
+│   └── workflow_service.py
 │
 ├── tests/
-│   ├── test_tickets.py
-│   ├── test_storage.py
-│   ├── test_workflow.py
-│   └── test_reports.py
+│   └── Automated test modules
 │
 ├── docs/
+│   ├── ai-learning-log.md
 │   ├── design-decisions.md
-│   └── ai-learning-log.md
+│   └── learning-reflections.md
 │
 └── data/
-    └── tickets.json
+    ├── tickets.json
+    └── knowledge_lab_sessions/
 ```
 
-The `data/tickets.json` file is generated during application use and is not committed to GitHub.
+The `data/` files and quiz sessions are generated during application use. They are not required to be present in a fresh clone.
 
 ## Installation and Setup
 
@@ -218,96 +296,108 @@ python3 main.py
 
 ### Step 4 — Use the Menu
 
-Select the required option to create tickets, view tickets, assign staff, update statuses, display the priority queue, or generate reports.
+Choose a menu option to create tickets, view ticket information, assign staff, update statuses, view queues, generate reports, or take the Knowledge Lab.
 
 Enter `0` to exit.
 
 ## Running Automated Tests
 
-CampusFlow includes automated tests written using Python's built-in `unittest` framework.
-
-Run the test suite using:
-
-```bash
-python3 -m unittest discover -s tests -v
-```
-
-Alternatively, install pytest in a virtual environment:
+Create and activate a virtual environment:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+```
+
+Install pytest:
+
+```bash
 python -m pip install pytest
+```
+
+Run the complete test suite:
+
+```bash
 python -m pytest -q
 ```
 
-### Verified Integrated Test Results
+Alternatively, run tests using Python's built-in unittest discovery:
 
-**38 tests passed, 0 failed.**
+```bash
+python -m unittest discover -s tests -v
+```
 
-The integrated test suite was successfully executed after merging both engineers' contributions and updating the command-line interface.
+### Verified Integrated Test Result
 
-Test coverage includes:
+**147 tests passed, 0 failed.**
 
-- Ticket creation and validation.
-- Priority calculation and boundary conditions.
-- Unique ticket IDs.
-- Category and urgency normalization.
-- JSON saving and loading.
-- Missing and corrupted JSON files.
-- Staff assignment.
-- Ticket status transitions and reopening.
-- Priority queue ordering.
-- Helpdesk report generation.
+Verified after merging Pull Request #8.
+
+**Verified main commit:** `ea0be81`
+
+The test suite covers ticket creation, validation, priority rules, JSON persistence, SLA calculations, escalation, audit logging, duplicate detection, workflow operations, reporting, CLI integration, and the Engineering Knowledge Lab.
 
 ## Input Validation and Error Handling
 
-CampusFlow rejects invalid operations, including:
+CampusFlow Pro rejects invalid operations, including:
 
 - Blank ticket titles.
 - Unsupported categories.
 - Invalid urgency values.
 - Zero or negative affected-user counts.
-- Text, decimal, or Boolean affected-user values.
+- Invalid numeric types.
 - Empty staff names.
-- Invalid ticket IDs for workflow operations.
-- Invalid ticket status transitions.
-- Attempts to begin work without an assigned staff member.
+- Invalid ticket IDs.
+- Unsupported workflow transitions.
+- Attempts to start work without an assignment.
+- Invalid persisted data.
 
-The application raises `ValueError` for invalid operations and displays understandable messages through the CLI.
+Rejected operations are designed to leave existing valid application data unchanged.
 
 ## Team Collaboration and Responsibilities
 
 ### Engineer A — John Ikwuobe
 
-**Role: Ticket Management, Priority Calculation, Persistence, and CLI Integration**
+**Role:** Ticket Creation, Priority Calculation, Data Integrity, and Testing.
 
-Responsibilities:
+Contributions:
 
-- Implement ticket creation.
-- Validate user input.
-- Calculate ticket priorities.
-- Generate unique ticket IDs.
-- Implement JSON persistence.
-- Write automated tests.
-- Integrate the CLI with workflow and reporting modules.
-- Participate in testing, documentation, and code reviews.
+- Ticket creation and input validation.
+- Automatic priority calculation.
+- Unique ticket ID generation.
+- JSON persistence and schema validation.
+- Automated tests.
+- Integration support.
+- Technical documentation.
 
-GitHub: https://github.com/successjohnny
+**GitHub:** https://github.com/successjohnny
 
 ### Engineer B — Idi Mohammed Mohammed
 
-**Role: Ticket Workflow and Reporting**
+**Role:** Ticket Workflow and Reporting.
 
-Responsibilities:
+Contributions:
 
-- Implement staff assignment.
-- Manage ticket status transitions.
-- Support ticket reopening.
-- Develop the priority work queue.
-- Generate helpdesk reports.
-- Write automated workflow and reporting tests.
-- Participate in integration, documentation, and code reviews.
+- Staff assignment.
+- Ticket status transitions.
+- Ticket reopening.
+- Original priority queue.
+- Helpdesk reporting.
+- Workflow and reporting tests.
+- Collaborative integration.
+
+### Engineer C — Moses Ochekwu
+
+**Role:** Audit, Duplicate Detection, SLA Analytics, CLI Integration, and Engineering Knowledge Lab.
+
+Contributions:
+
+- Audit event recording.
+- Duplicate ticket detection.
+- SLA attention queue and analytics.
+- Command-line interface integration.
+- Engineering Knowledge Lab.
+- Related integration and testing contributions.
 
 ## GitHub Collaboration Workflow
 
@@ -315,78 +405,84 @@ The team used Git and GitHub to coordinate development.
 
 The workflow included:
 
-1. Creating separate feature branches.
+1. Creating feature branches.
 2. Implementing assigned modules.
 3. Writing automated tests.
 4. Committing and pushing changes.
-5. Creating pull requests.
-6. Reviewing each other's code.
-7. Resolving integration conflicts.
-8. Merging the contributions.
+5. Opening pull requests.
+6. Reviewing code.
+7. Resolving integration issues.
+8. Merging approved changes.
 9. Running the complete test suite.
-10. Publishing the integrated project on `main`.
 
-### Repository
-
-https://github.com/successjohnny/campusflow
+**Repository:** https://github.com/successjohnny/campusflow
 
 ## Design Decisions
 
-The project's architecture and function contracts are documented in:
+The technical architecture, business rules, module responsibilities, persistence format, testing strategy, and collaboration decisions are documented in:
 
 `docs/design-decisions.md`
 
-The document covers ticket structures, validation rules, priority calculations, workflow restrictions, JSON persistence, testing, and collaboration decisions.
-
 ## AI-Assisted Learning
 
-AI tools were used to support learning, debugging, and understanding Python concepts.
+AI tools supported the team's understanding of Python concepts, debugging, testing, and system design.
 
-Learning topics included:
-
-- Conditional logic and priority calculation.
-- JSON serialization and deserialization.
-- Exception handling.
-- Input validation and data integrity.
-- Unit testing and debugging.
-
-AI suggestions were evaluated against the assignment requirements and verified through code inspection, experiments, and automated tests.
-
-The learning evidence is documented in:
+Learning evidence is documented in:
 
 `docs/ai-learning-log.md`
 
+The log includes three documented learning cycles for Engineer A.
+
+Engineers B and C have sections reserved for their actual AI learning evidence, which must be completed before final submission if required by the assessment.
+
 ### Example of Critical AI Evaluation
 
-During priority calculation development, an earlier AI suggestion used 20 affected users as the critical-priority threshold.
+During priority calculation, an AI suggestion used 20 affected users as the critical-priority threshold.
 
-After checking the project requirements, Engineer A identified that the correct threshold was 10 affected users.
+The project specification required 10 affected users.
 
-The implementation was corrected and verified using automated tests.
+Engineer A rejected the incorrect suggestion and verified the correct implementation through testing.
 
-This demonstrated the importance of independently verifying AI-generated suggestions.
+This illustrates why AI-generated suggestions must be checked against project requirements.
+
+## Engineering Knowledge Lab Reflections
+
+Individual quiz results and reflections are documented in:
+
+`docs/learning-reflections.md`
+
+### Recorded Result
+
+**John Ikwuobe:** 10/10 — 100%
+
+**Session ID:** `af86daa384474d0db855004bed6b3f6f`
+
+The results and reflections for Idi Mohammed Mohammed and Moses Ochekwu are pending.
 
 ## Future Improvements
 
-Possible future enhancements include:
+Potential future enhancements include:
 
 - SQLite or PostgreSQL database integration.
 - A FastAPI web interface.
 - Staff authentication and role-based access.
-- Ticket search and filtering.
-- Ticket activity history.
-- Email notifications.
-- Dashboard analytics.
+- Automatic scheduled SLA monitoring.
+- Email or in-app notifications.
+- Advanced reporting dashboards.
+- Multi-user access.
+- Additional Knowledge Lab assessments.
+
+These are future possibilities and are not claimed as implemented features.
 
 ## Project Status
 
-**Core implementation and CLI integration completed.**
+**Core CampusFlow Pro implementation completed and integrated.**
 
-Both engineers' modules have been integrated into the application.
+The application includes ticket management, workflow operations, SLA monitoring, audit events, duplicate detection, reporting, and the Engineering Knowledge Lab.
 
-All 38 automated tests passed during final integration testing.
+The latest verified integrated test run completed with **147 passing tests** on main commit `ea0be81`.
 
-The completed code has been pushed to the GitHub `main` branch.
+Final submission documentation is being completed.
 
 ## Acknowledgement
 
@@ -396,7 +492,10 @@ Developed as a collaborative Python engineering project for the **Learn2Earn Pyt
 
 - John Ikwuobe — Engineer A
 - Idi Mohammed Mohammed — Engineer B
+- Moses Ochekwu — Engineer C
 
 ## License
 
-This project was created for educational purposes as part of the Learn2Earn Python Engineering Sprint. No separate software license has been specified.
+This project was created for educational purposes as part of the Learn2Earn Python Engineering Sprint.
+
+No separate software license has been specified.
