@@ -1,11 +1,16 @@
+"""CampusFlow Pro command-line interface."""
 
 from tickets import create_ticket
 from storage import load_tickets, save_tickets
+
 from campusflow.workflow import assign_ticket, change_status
 from campusflow.reports import get_priority_queue, generate_report
+from campusflow.knowledge_lab import run_quiz
 
 
 def show_menu():
+    """Display the CampusFlow main menu."""
+
     print("\n===== CAMPUSFLOW HELPDESK =====")
     print("1. Create Ticket")
     print("2. View All Tickets")
@@ -14,10 +19,13 @@ def show_menu():
     print("5. Update Ticket Status")
     print("6. View Priority Queue")
     print("7. Generate Reports")
+    print("8. Knowledge Lab")
     print("0. Exit")
 
 
 def create_ticket_menu(tickets):
+    """Create and save a new ticket."""
+
     print("\n--- CREATE TICKET ---")
 
     title = input("Title: ")
@@ -30,7 +38,11 @@ def create_ticket_menu(tickets):
         affected_users = int(input("Affected users: "))
 
         ticket = create_ticket(
-            tickets, title, category, urgency, affected_users
+            tickets,
+            title,
+            category,
+            urgency,
+            affected_users,
         )
 
         save_tickets(tickets)
@@ -43,6 +55,8 @@ def create_ticket_menu(tickets):
 
 
 def list_tickets(tickets):
+    """Display all tickets."""
+
     print("\n--- ALL TICKETS ---")
 
     if not tickets:
@@ -59,6 +73,8 @@ def list_tickets(tickets):
 
 
 def view_ticket(tickets):
+    """Display the details of a selected ticket."""
+
     ticket_id = input("Enter ticket ID: ").strip().upper()
 
     for ticket in tickets:
@@ -74,13 +90,20 @@ def view_ticket(tickets):
 
 
 def assign_ticket_menu(tickets):
+    """Assign a ticket to a staff member."""
+
     print("\n--- ASSIGN TICKET ---")
 
     ticket_id = input("Ticket ID: ").strip().upper()
     staff_name = input("Staff name: ")
 
     try:
-        ticket = assign_ticket(tickets, ticket_id, staff_name)
+        ticket = assign_ticket(
+            tickets,
+            ticket_id,
+            staff_name,
+        )
+
         save_tickets(tickets)
 
         print(
@@ -93,6 +116,8 @@ def assign_ticket_menu(tickets):
 
 
 def update_status_menu(tickets):
+    """Update a ticket's status."""
+
     print("\n--- UPDATE TICKET STATUS ---")
 
     ticket_id = input("Ticket ID: ").strip().upper()
@@ -105,10 +130,11 @@ def update_status_menu(tickets):
     choices = {
         "1": "in_progress",
         "2": "resolved",
-        "3": "open"
+        "3": "open",
     }
 
     choice = input("Choose status: ").strip()
+
     new_status = choices.get(choice)
 
     if new_status is None:
@@ -116,7 +142,12 @@ def update_status_menu(tickets):
         return
 
     try:
-        ticket = change_status(tickets, ticket_id, new_status)
+        ticket = change_status(
+            tickets,
+            ticket_id,
+            new_status,
+        )
+
         save_tickets(tickets)
 
         print(
@@ -129,6 +160,8 @@ def update_status_menu(tickets):
 
 
 def priority_queue_menu(tickets):
+    """Display open tickets in priority order."""
+
     print("\n--- PRIORITY QUEUE ---")
 
     queue = get_priority_queue(tickets)
@@ -147,6 +180,8 @@ def priority_queue_menu(tickets):
 
 
 def reports_menu(tickets):
+    """Display the standard CampusFlow report."""
+
     print("\n--- CAMPUSFLOW REPORT ---")
 
     report = generate_report(tickets)
@@ -154,15 +189,25 @@ def reports_menu(tickets):
     print(f"\nTotal Tickets: {report['total']}")
 
     print("\nTickets by Status:")
+
     for status, count in report["by_status"].items():
         print(f"  {status}: {count}")
 
     print("\nTickets by Priority:")
+
     for priority, count in report["by_priority"].items():
         print(f"  {priority}: {count}")
 
 
+def knowledge_lab_menu():
+    """Launch the interactive Knowledge Lab."""
+
+    run_quiz()
+
+
 def main():
+    """Run the CampusFlow application."""
+
     try:
         tickets = load_tickets()
 
@@ -196,6 +241,9 @@ def main():
 
             elif choice == "7":
                 reports_menu(tickets)
+
+            elif choice == "8":
+                knowledge_lab_menu()
 
             elif choice == "0":
                 print("Thank you for using CampusFlow!")
