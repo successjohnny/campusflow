@@ -411,9 +411,7 @@ def main():
                 knowledge_lab_menu()
 
             elif choice == "0":
-                print(
-                    "\nThank you for using CampusFlow Pro!"
-                )
+                print("Thank you for using CampusFlow!")
                 break
 
             else:
