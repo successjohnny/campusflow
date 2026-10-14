@@ -4,7 +4,11 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from campusflow.sla import calculate_due_at, is_overdue
+from campusflow.sla import (
+    calculate_due_at,
+    is_overdue,
+    escalate_overdue,
+)
 
 
 class TestSLAEngine(unittest.TestCase):
@@ -105,6 +109,116 @@ class TestSLAEngine(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             is_overdue(ticket, naive_now)
+
+    
+    def test_first_escalation(self):
+        ticket = self.make_ticket()
+        ticket["id"] = "T001"
+        ticket["escalation_cycle"] = 0
+
+        events = []
+        now = self.start + timedelta(minutes=61)
+
+        result = escalate_overdue(
+            [ticket], events, now, "Engineer A"
+        )
+
+        self.assertEqual(result["newly_escalated"], 1)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["event_type"], "ESCALATE")
+
+    def test_repeated_escalation_is_idempotent(self):
+        ticket = self.make_ticket()
+        ticket["id"] = "T001"
+        ticket["escalation_cycle"] = 0
+
+        events = []
+        now = self.start + timedelta(minutes=61)
+
+        escalate_overdue([ticket], events, now, "Engineer A")
+        result = escalate_overdue(
+            [ticket], events, now, "Engineer A"
+        )
+
+        self.assertEqual(result["newly_escalated"], 0)
+        self.assertEqual(result["already_escalated"], 1)
+        self.assertEqual(len(events), 1)
+
+    def test_reopened_ticket_can_escalate_again(self):
+        ticket = self.make_ticket()
+        ticket["id"] = "T001"
+        ticket["escalation_cycle"] = 0
+
+        events = []
+        first_overdue = self.start + timedelta(minutes=61)
+
+        escalate_overdue(
+            [ticket], events, first_overdue, "Engineer A"
+        )
+
+        # Simulate a new SLA cycle after reopening.
+        reopened_at = self.start + timedelta(hours=2)
+        ticket["escalation_cycle"] = 1
+        ticket["due_at"] = calculate_due_at(
+            "critical", reopened_at
+        )
+
+        second_overdue = reopened_at + timedelta(minutes=61)
+
+        result = escalate_overdue(
+            [ticket], events, second_overdue, "Engineer A"
+        )
+
+        self.assertEqual(result["newly_escalated"], 1)
+        self.assertEqual(len(events), 2)
+
+    def test_not_overdue_does_not_escalate(self):
+        ticket = self.make_ticket()
+        ticket["id"] = "T001"
+        ticket["escalation_cycle"] = 0
+
+        events = []
+        now = self.start + timedelta(minutes=60)
+
+        result = escalate_overdue(
+            [ticket], events, now, "Engineer A"
+        )
+
+        self.assertEqual(result["newly_escalated"], 0)
+        self.assertEqual(len(events), 0)
+
+    
+    def test_escalation_has_unique_event_id(self):
+        ticket = self.make_ticket()
+        ticket["id"] = "T001"
+        ticket["escalation_cycle"] = 0
+
+        events = []
+        now = self.start + timedelta(minutes=61)
+
+        escalate_overdue([ticket], events, now, "Engineer A")
+
+        self.assertIsInstance(events[0]["event_id"], str)
+        self.assertTrue(events[0]["event_id"])
+
+    def test_invalid_ticket_does_not_create_partial_events(self):
+        first = self.make_ticket()
+        first["id"] = "T001"
+        first["escalation_cycle"] = 0
+
+        invalid = self.make_ticket()
+        invalid["id"] = "T002"
+        invalid["escalation_cycle"] = -1
+
+        events = []
+        now = self.start + timedelta(minutes=61)
+
+        with self.assertRaises(ValueError):
+            escalate_overdue(
+                [first, invalid], events, now, "Engineer A"
+            )
+
+        self.assertEqual(events, [])
 
 
 if __name__ == "__main__":
