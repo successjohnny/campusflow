@@ -1,8 +1,7 @@
 """CampusFlow Pro command-line interface."""
 
-from tickets import create_ticket
-from storage import load_tickets, save_tickets
-
+from storage import load_data
+from campusflow.ticket_service import create_ticket_service
 from campusflow.workflow import assign_ticket, change_status
 from campusflow.reports import get_priority_queue, generate_report
 from campusflow.knowledge_lab import run_quiz
@@ -23,8 +22,8 @@ def show_menu():
     print("0. Exit")
 
 
-def create_ticket_menu(tickets):
-    """Create and save a new ticket."""
+def create_ticket_menu(tickets, events):
+    """Create a ticket using schema v2 storage."""
 
     print("\n--- CREATE TICKET ---")
 
@@ -36,19 +35,52 @@ def create_ticket_menu(tickets):
 
     try:
         affected_users = int(input("Affected users: "))
+        actor = input("Created by: ").strip()
 
-        ticket = create_ticket(
-            tickets,
-            title,
-            category,
-            urgency,
-            affected_users,
+        result = create_ticket_service(
+            tickets=tickets,
+            events=events,
+            title=title,
+            category=category,
+            urgency=urgency,
+            affected_users=affected_users,
+            actor=actor,
         )
 
-        save_tickets(tickets)
+        if not result["created"]:
+            print("\nPossible duplicate tickets found:")
+
+            for ticket in result["duplicates"]:
+                print(
+                    f"{ticket['id']} | "
+                    f"{ticket['title']} | "
+                    f"Status: {ticket['status']}"
+                )
+
+            confirmation = input(
+                "\nCreate this ticket anyway? (yes/no): "
+            ).strip().lower()
+
+            if confirmation not in {"yes", "y"}:
+                print("Ticket creation cancelled.")
+                return
+
+            result = create_ticket_service(
+                tickets=tickets,
+                events=events,
+                title=title,
+                category=category,
+                urgency=urgency,
+                affected_users=affected_users,
+                actor=actor,
+                confirm_duplicate=True,
+            )
+
+        ticket = result["ticket"]
 
         print(f"\nTicket {ticket['id']} created successfully!")
         print(f"Priority: {ticket['priority']}")
+        print(f"SLA Deadline: {ticket['due_at']}")
 
     except ValueError as error:
         print(f"Error: {error}")
@@ -94,25 +126,10 @@ def assign_ticket_menu(tickets):
 
     print("\n--- ASSIGN TICKET ---")
 
-    ticket_id = input("Ticket ID: ").strip().upper()
-    staff_name = input("Staff name: ")
-
-    try:
-        ticket = assign_ticket(
-            tickets,
-            ticket_id,
-            staff_name,
-        )
-
-        save_tickets(tickets)
-
-        print(
-            f"Ticket {ticket['id']} assigned to "
-            f"{ticket['assigned_to']}."
-        )
-
-    except ValueError as error:
-        print(f"Error: {error}")
+    print(
+        "Assignment is temporarily unavailable until "
+        "schema v2 workflow integration is complete."
+    )
 
 
 def update_status_menu(tickets):
@@ -120,43 +137,10 @@ def update_status_menu(tickets):
 
     print("\n--- UPDATE TICKET STATUS ---")
 
-    ticket_id = input("Ticket ID: ").strip().upper()
-
-    print("Available statuses:")
-    print("1. in_progress")
-    print("2. resolved")
-    print("3. open (reopen a resolved ticket)")
-
-    choices = {
-        "1": "in_progress",
-        "2": "resolved",
-        "3": "open",
-    }
-
-    choice = input("Choose status: ").strip()
-
-    new_status = choices.get(choice)
-
-    if new_status is None:
-        print("Invalid status option.")
-        return
-
-    try:
-        ticket = change_status(
-            tickets,
-            ticket_id,
-            new_status,
-        )
-
-        save_tickets(tickets)
-
-        print(
-            f"Ticket {ticket['id']} status updated to "
-            f"{ticket['status']}."
-        )
-
-    except ValueError as error:
-        print(f"Error: {error}")
+    print(
+        "Status updates are temporarily unavailable until "
+        "schema v2 workflow integration is complete."
+    )
 
 
 def priority_queue_menu(tickets):
@@ -209,7 +193,9 @@ def main():
     """Run the CampusFlow application."""
 
     try:
-        tickets = load_tickets()
+        data = load_data()
+        tickets = data["tickets"]
+        events = data["events"]
 
     except (ValueError, OSError) as error:
         print(f"Unable to load tickets: {error}")
@@ -222,7 +208,7 @@ def main():
             choice = input("Choose an option: ").strip()
 
             if choice == "1":
-                create_ticket_menu(tickets)
+                create_ticket_menu(tickets, events)
 
             elif choice == "2":
                 list_tickets(tickets)
