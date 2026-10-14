@@ -24,7 +24,14 @@ class TestKnowledgeLabCLI(unittest.TestCase):
 
         mock_print.assert_any_call("8. Knowledge Lab")
 
-    @patch("main.load_tickets", return_value=[])
+    @patch(
+        "main.load_data",
+        return_value={
+            "schema_version": 2,
+            "tickets": [],
+            "events": [],
+        },
+    )
     @patch("main.run_quiz")
     @patch("builtins.input", side_effect=["8", "0"])
     @patch("builtins.print")
