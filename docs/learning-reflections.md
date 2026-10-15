@@ -49,6 +49,8 @@ I correctly answered all ten questions, demonstrating familiarity with SLA deadl
 
 My work on ticket creation, priority calculation, validation, and persistence also helped me understand how these features interact within a larger application.
 
+The Engineering Knowledge Lab strengthened my understanding of Python programming, data validation, JSON persistence, and software testing. The most challenging concept was ensuring that failed operations do not change valid application data. I learned how proper validation, safe file handling, and automated testing help maintain data integrity. Achieving 10/10 in the Knowledge Lab gave me confidence in applying these engineering principles to real-world software development.
+
 **Personal reflection to finalize:** Add one or two sentences describing which question or concept was most challenging and what you learned from it.
 
 ## 3. Engineer B — Idi Mohammed Mohammed
