@@ -2,8 +2,7 @@
 """Unit tests for CampusFlow Pro enhanced analytics."""
 
 import unittest
-
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TypedDict
 
 from campusflow.reports import generate_enhanced_report
@@ -30,7 +29,7 @@ class TestEnhancedReports(unittest.TestCase):
     def setUp(self) -> None:
         self.now: datetime = datetime(
             2026, 10, 14, 12, 0,
-            tzinfo=timezone.utc,
+            tzinfo=UTC,
         )
 
         self.tickets: list[Ticket] = [

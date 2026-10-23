@@ -2,13 +2,13 @@
 """Unit tests for the CampusFlow Pro SLA engine."""
 
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import NotRequired, TypedDict
 
 from campusflow.sla import (
     calculate_due_at,
-    is_overdue,
     escalate_overdue,
+    is_overdue,
 )
 
 
@@ -37,7 +37,7 @@ class TestSLAEngine(unittest.TestCase):
         """Use a fixed UTC time for repeatable tests."""
         self.start: datetime = datetime(
             2026, 10, 14, 10, 0,
-            tzinfo=timezone.utc
+            tzinfo=UTC
         )
 
     def make_ticket(

@@ -4,7 +4,7 @@
 import unittest
 from typing import TypedDict
 
-from tickets import create_ticket, calculate_priority
+from tickets import calculate_priority, create_ticket
 
 
 class Ticket(TypedDict):

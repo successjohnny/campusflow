@@ -230,9 +230,8 @@ class TestStorageV2(unittest.TestCase):
         with patch(
             "storage.os.replace",
             side_effect=OSError("Disk error"),
-        ):
-            with self.assertRaises(OSError):
-                save_data([], [], self.path)
+        ), self.assertRaises(OSError):
+            save_data([], [], self.path)
 
         # The existing file must remain unchanged.
         self.assertEqual(

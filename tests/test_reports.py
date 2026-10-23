@@ -4,7 +4,7 @@
 import unittest
 from typing import TypedDict
 
-from campusflow.reports import get_priority_queue, generate_report
+from campusflow.reports import generate_report, get_priority_queue
 
 
 class Ticket(TypedDict):

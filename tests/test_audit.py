@@ -2,10 +2,9 @@
 """Tests for CampusFlow Pro audit event recording."""
 
 import unittest
+from datetime import UTC, datetime
 
-from datetime import datetime, timezone
-
-from campusflow.audit import record_event, get_ticket_history
+from campusflow.audit import get_ticket_history, record_event
 
 
 class TestAuditEvents(unittest.TestCase):
@@ -15,7 +14,7 @@ class TestAuditEvents(unittest.TestCase):
 
         self.now = datetime(
             2026, 10, 14, 10, 0,
-            tzinfo=timezone.utc
+            tzinfo=UTC
         )
 
     def test_create_event(self) -> None:
@@ -112,12 +111,12 @@ class TestAuditEvents(unittest.TestCase):
     def test_ticket_history_chronological(self) -> None:
         later = datetime(
             2026, 10, 14, 12, 0,
-            tzinfo=timezone.utc
+            tzinfo=UTC
         )
 
         earlier = datetime(
             2026, 10, 14, 10, 0,
-            tzinfo=timezone.utc
+            tzinfo=UTC
         )
 
         record_event(

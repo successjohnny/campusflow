@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, TypeAlias
 
 from campusflow.audit import record_event
@@ -30,7 +30,7 @@ def _prepare(
         raise ValueError("Actor must be a non-empty string")
 
     if now is None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
     if not isinstance(now, datetime):
         raise TypeError("now must be a datetime")
@@ -41,7 +41,7 @@ def _prepare(
     return (
         deepcopy(tickets),
         deepcopy(events),
-        now.astimezone(timezone.utc),
+        now.astimezone(UTC),
     )
 
 

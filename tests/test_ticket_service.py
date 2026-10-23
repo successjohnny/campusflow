@@ -2,7 +2,7 @@
 """Tests for CampusFlow Pro ticket creation service."""
 
 import unittest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import Mock
 
@@ -17,7 +17,7 @@ class TestTicketService(unittest.TestCase):
 
         self.now: datetime = datetime(
             2026, 10, 14, 12, 0,
-            tzinfo=timezone.utc,
+            tzinfo=UTC,
         )
 
         self.save: Mock = Mock()

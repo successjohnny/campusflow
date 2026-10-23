@@ -6,8 +6,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
-from tickets import create_ticket
 from storage import load_tickets, save_tickets
+from tickets import create_ticket
 
 
 class TestStorage(unittest.TestCase):

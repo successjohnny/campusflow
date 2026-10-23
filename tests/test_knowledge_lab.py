@@ -4,14 +4,14 @@
 import json
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from campusflow.knowledge_lab import (
     QUESTIONS,
-    check_answer,
     calculate_score,
+    check_answer,
     run_quiz,
     save_quiz_session,
 )
@@ -148,7 +148,7 @@ class TestKnowledgeLab(unittest.TestCase):
         answers: list[str] = self.correct_answers()
         result = calculate_score(QUESTIONS, answers)
         now: datetime = datetime(
-            2026, 10, 14, 12, 0, tzinfo=timezone.utc
+            2026, 10, 14, 12, 0, tzinfo=UTC
         )
 
         path = save_quiz_session(

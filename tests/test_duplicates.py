@@ -5,8 +5,8 @@ import unittest
 from typing import TypedDict
 
 from campusflow.duplicates import (
-    normalize_title,
     detect_duplicates,
+    normalize_title,
 )
 
 

@@ -2,7 +2,7 @@
 """Tests for CampusFlow Pro workflow services."""
 
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import Mock
 
@@ -21,7 +21,7 @@ class TestWorkflowService(unittest.TestCase):
 
         self.now: datetime = datetime(
             2026, 10, 14, 12, 0,
-            tzinfo=timezone.utc,
+            tzinfo=UTC,
         )
 
         self.save: Mock = Mock()

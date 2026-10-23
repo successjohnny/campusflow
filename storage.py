@@ -4,10 +4,9 @@
 import json
 import os
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, TypeAlias
-
 
 # JSON records may contain strings, integers, lists,
 # dictionaries, booleans, or null values.
@@ -63,7 +62,7 @@ def validate_timestamp(value: str) -> datetime:
     if offset.total_seconds() != 0:
         raise ValueError("Timestamp must be in UTC")
 
-    return parsed.astimezone(timezone.utc)
+    return parsed.astimezone(UTC)
 
 
 def validate_data(data: Record) -> bool:
