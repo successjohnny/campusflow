@@ -1,7 +1,12 @@
 """Duplicate ticket detection for CampusFlow Pro."""
 
+from typing import Any, TypeAlias
 
-def normalize_title(title):
+
+Ticket: TypeAlias = dict[str, Any]
+
+
+def normalize_title(title: str) -> str:
     """Normalize ticket titles for comparison."""
 
     if not isinstance(title, str):
@@ -10,7 +15,11 @@ def normalize_title(title):
     return " ".join(title.split()).casefold()
 
 
-def detect_duplicates(tickets, category, title):
+def detect_duplicates(
+    tickets: list[Ticket],
+    category: str,
+    title: str,
+) -> list[Ticket]:
     """Find unresolved tickets with matching category and title."""
 
     if not isinstance(tickets, list):
@@ -19,21 +28,21 @@ def detect_duplicates(tickets, category, title):
     if not isinstance(category, str) or not category.strip():
         raise ValueError("Invalid category")
 
-    normalized_title = normalize_title(title)
+    normalized_title: str = normalize_title(title)
 
     if not normalized_title:
         raise ValueError("Ticket title cannot be empty")
 
-    normalized_category = category.strip().casefold()
+    normalized_category: str = category.strip().casefold()
 
-    duplicates = []
+    duplicates: list[Ticket] = []
 
     for ticket in tickets:
         if ticket["status"] == "resolved":
             continue
 
-        existing_category = ticket["category"].strip().casefold()
-        existing_title = normalize_title(ticket["title"])
+        existing_category: str = ticket["category"].strip().casefold()
+        existing_title: str = normalize_title(ticket["title"])
 
         if (
             existing_category == normalized_category

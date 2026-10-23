@@ -1,8 +1,9 @@
+
 """Tests for the CampusFlow Pro SLA Attention Queue."""
 
 import unittest
-
 from datetime import datetime, timezone
+from typing import TypedDict
 
 from campusflow.reports import (
     get_priority_queue,
@@ -10,15 +11,24 @@ from campusflow.reports import (
 )
 
 
+class Ticket(TypedDict):
+    """Represent a ticket used in SLA Attention Queue tests."""
+
+    id: str
+    status: str
+    priority: str
+    due_at: str
+
+
 class TestSLAAttentionQueue(unittest.TestCase):
 
-    def setUp(self):
-        self.now = datetime(
+    def setUp(self) -> None:
+        self.now: datetime = datetime(
             2026, 10, 14, 12, 0,
             tzinfo=timezone.utc,
         )
 
-        self.tickets = [
+        self.tickets: list[Ticket] = [
             {
                 "id": "T001",
                 "status": "open",
@@ -45,7 +55,7 @@ class TestSLAAttentionQueue(unittest.TestCase):
             },
         ]
 
-    def test_overdue_tickets_first(self):
+    def test_overdue_tickets_first(self) -> None:
         queue = get_sla_attention_queue(
             self.tickets,
             self.now,
@@ -56,27 +66,31 @@ class TestSLAAttentionQueue(unittest.TestCase):
             ["T002", "T001", "T003"],
         )
 
-    def test_in_progress_ticket_is_included(self):
+    def test_in_progress_ticket_is_included(self) -> None:
         queue = get_sla_attention_queue(
             self.tickets,
             self.now,
         )
 
-        ids = [ticket["id"] for ticket in queue]
+        ids: list[str] = [
+            ticket["id"] for ticket in queue
+        ]
 
         self.assertIn("T002", ids)
 
-    def test_resolved_ticket_is_excluded(self):
+    def test_resolved_ticket_is_excluded(self) -> None:
         queue = get_sla_attention_queue(
             self.tickets,
             self.now,
         )
 
-        ids = [ticket["id"] for ticket in queue]
+        ids: list[str] = [
+            ticket["id"] for ticket in queue
+        ]
 
         self.assertNotIn("T004", ids)
 
-    def test_earliest_deadline_first(self):
+    def test_earliest_deadline_first(self) -> None:
         queue = get_sla_attention_queue(
             self.tickets,
             self.now,
@@ -84,8 +98,8 @@ class TestSLAAttentionQueue(unittest.TestCase):
 
         self.assertEqual(queue[0]["id"], "T002")
 
-    def test_numeric_ticket_id_breaks_ties(self):
-        tickets = [
+    def test_numeric_ticket_id_breaks_ties(self) -> None:
+        tickets: list[Ticket] = [
             {
                 "id": "T010",
                 "status": "open",
@@ -110,8 +124,8 @@ class TestSLAAttentionQueue(unittest.TestCase):
             ["T002", "T010"],
         )
 
-    def test_exact_deadline_is_not_overdue(self):
-        tickets = [
+    def test_exact_deadline_is_not_overdue(self) -> None:
+        tickets: list[Ticket] = [
             {
                 "id": "T001",
                 "status": "open",
@@ -136,13 +150,13 @@ class TestSLAAttentionQueue(unittest.TestCase):
             ["T002", "T001"],
         )
 
-    def test_empty_queue(self):
+    def test_empty_queue(self) -> None:
         queue = get_sla_attention_queue([], self.now)
 
         self.assertEqual(queue, [])
 
-    def test_naive_datetime_rejected(self):
-        naive_now = datetime(2026, 10, 14, 12, 0)
+    def test_naive_datetime_rejected(self) -> None:
+        naive_now: datetime = datetime(2026, 10, 14, 12, 0)
 
         with self.assertRaises(ValueError):
             get_sla_attention_queue(
@@ -150,8 +164,8 @@ class TestSLAAttentionQueue(unittest.TestCase):
                 naive_now,
             )
 
-    def test_original_tickets_not_modified(self):
-        original = [
+    def test_original_tickets_not_modified(self) -> None:
+        original: list[Ticket] = [
             ticket.copy()
             for ticket in self.tickets
         ]
@@ -163,7 +177,7 @@ class TestSLAAttentionQueue(unittest.TestCase):
 
         self.assertEqual(self.tickets, original)
 
-    def test_existing_priority_queue_still_works(self):
+    def test_existing_priority_queue_still_works(self) -> None:
         queue = get_priority_queue(self.tickets)
 
         self.assertEqual(

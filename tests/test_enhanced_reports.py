@@ -1,21 +1,39 @@
+
 """Unit tests for CampusFlow Pro enhanced analytics."""
 
 import unittest
 
 from datetime import datetime, timezone
+from typing import TypedDict
 
 from campusflow.reports import generate_enhanced_report
 
 
+class Ticket(TypedDict):
+    id: str
+    priority: str
+    status: str
+    assigned_to: str | None
+    created_at: str
+    due_at: str
+
+
+class Event(TypedDict):
+    event_id: str
+    ticket_id: str
+    event_type: str
+    timestamp: str
+
+
 class TestEnhancedReports(unittest.TestCase):
 
-    def setUp(self):
-        self.now = datetime(
+    def setUp(self) -> None:
+        self.now: datetime = datetime(
             2026, 10, 14, 12, 0,
             tzinfo=timezone.utc,
         )
 
-        self.tickets = [
+        self.tickets: list[Ticket] = [
             {
                 "id": "T001",
                 "priority": "critical",
@@ -50,7 +68,7 @@ class TestEnhancedReports(unittest.TestCase):
             },
         ]
 
-        self.events = [
+        self.events: list[Event] = [
             {
                 "event_id": "E001",
                 "ticket_id": "T003",
@@ -59,7 +77,7 @@ class TestEnhancedReports(unittest.TestCase):
             }
         ]
 
-    def test_overdue_total(self):
+    def test_overdue_total(self) -> None:
         report = generate_enhanced_report(
             self.tickets,
             self.events,
@@ -68,7 +86,7 @@ class TestEnhancedReports(unittest.TestCase):
 
         self.assertEqual(report["overdue_total"], 1)
 
-    def test_overdue_by_priority(self):
+    def test_overdue_by_priority(self) -> None:
         report = generate_enhanced_report(
             self.tickets,
             self.events,
@@ -85,7 +103,7 @@ class TestEnhancedReports(unittest.TestCase):
             0,
         )
 
-    def test_exact_deadline_not_overdue(self):
+    def test_exact_deadline_not_overdue(self) -> None:
         report = generate_enhanced_report(
             self.tickets,
             self.events,
@@ -94,7 +112,7 @@ class TestEnhancedReports(unittest.TestCase):
 
         self.assertEqual(report["overdue_total"], 1)
 
-    def test_staff_workload(self):
+    def test_staff_workload(self) -> None:
         report = generate_enhanced_report(
             self.tickets,
             self.events,
@@ -111,7 +129,7 @@ class TestEnhancedReports(unittest.TestCase):
             report["staff_workload"],
         )
 
-    def test_resolution_rate(self):
+    def test_resolution_rate(self) -> None:
         report = generate_enhanced_report(
             self.tickets,
             self.events,
@@ -123,7 +141,7 @@ class TestEnhancedReports(unittest.TestCase):
             25.0,
         )
 
-    def test_average_resolution_time(self):
+    def test_average_resolution_time(self) -> None:
         report = generate_enhanced_report(
             self.tickets,
             self.events,
@@ -135,7 +153,7 @@ class TestEnhancedReports(unittest.TestCase):
             4.0,
         )
 
-    def test_latest_resolution_event_used(self):
+    def test_latest_resolution_event_used(self) -> None:
         self.events.append(
             {
                 "event_id": "E002",
@@ -156,7 +174,7 @@ class TestEnhancedReports(unittest.TestCase):
             6.0,
         )
 
-    def test_empty_data(self):
+    def test_empty_data(self) -> None:
         report = generate_enhanced_report(
             [],
             [],
@@ -174,8 +192,8 @@ class TestEnhancedReports(unittest.TestCase):
             0.0,
         )
 
-    def test_invalid_now_rejected(self):
-        naive_now = datetime(2026, 10, 14, 12, 0)
+    def test_invalid_now_rejected(self) -> None:
+        naive_now: datetime = datetime(2026, 10, 14, 12, 0)
 
         with self.assertRaises(ValueError):
             generate_enhanced_report(
@@ -184,7 +202,7 @@ class TestEnhancedReports(unittest.TestCase):
                 naive_now,
             )
 
-    def test_resolution_before_creation_rejected(self):
+    def test_resolution_before_creation_rejected(self) -> None:
         self.events[0]["timestamp"] = (
             "2026-10-12T12:00:00+00:00"
         )
@@ -196,7 +214,7 @@ class TestEnhancedReports(unittest.TestCase):
                 self.now,
             )
 
-    def test_missing_resolution_event(self):
+    def test_missing_resolution_event(self) -> None:
         report = generate_enhanced_report(
             self.tickets,
             [],
@@ -208,13 +226,13 @@ class TestEnhancedReports(unittest.TestCase):
             0.0,
         )
 
-    def test_inputs_not_modified(self):
-        original_tickets = [
+    def test_inputs_not_modified(self) -> None:
+        original_tickets: list[Ticket] = [
             ticket.copy()
             for ticket in self.tickets
         ]
 
-        original_events = [
+        original_events: list[Event] = [
             event.copy()
             for event in self.events
         ]

@@ -6,39 +6,52 @@ import os
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, TypeAlias
 
 
-DATA_FILE = Path(__file__).resolve().parent / "data" / "tickets.json"
+# JSON records may contain strings, integers, lists,
+# dictionaries, booleans, or null values.
+Record: TypeAlias = dict[str, Any]
+Records: TypeAlias = list[Record]
+FilePath: TypeAlias = str | Path
 
-SCHEMA_VERSION = 2
 
-TICKET_FIELDS = {
+DATA_FILE: Path = (
+    Path(__file__).resolve().parent / "data" / "tickets.json"
+)
+
+SCHEMA_VERSION: int = 2
+
+TICKET_FIELDS: set[str] = {
     "id", "title", "category", "urgency",
     "affected_users", "priority", "status",
     "assigned_to", "created_at", "updated_at",
     "due_at", "escalation_cycle",
 }
 
-EVENT_FIELDS = {
+EVENT_FIELDS: set[str] = {
     "event_id", "ticket_id", "event_type", "actor",
     "timestamp", "before_status", "after_status",
     "details",
 }
 
-STATUSES = {"open", "in_progress", "resolved"}
-EVENT_TYPES = {
+STATUSES: set[str] = {
+    "open", "in_progress", "resolved"
+}
+
+EVENT_TYPES: set[str] = {
     "CREATE", "ASSIGN", "START",
     "RESOLVE", "REOPEN", "ESCALATE",
 }
 
 
-def validate_timestamp(value):
+def validate_timestamp(value: str) -> datetime:
     """Return a valid timezone-aware UTC datetime."""
     if not isinstance(value, str):
         raise ValueError("Timestamp must be a string")
 
     try:
-        parsed = datetime.fromisoformat(value)
+        parsed: datetime = datetime.fromisoformat(value)
     except ValueError as error:
         raise ValueError("Invalid ISO-8601 timestamp") from error
 
@@ -51,7 +64,7 @@ def validate_timestamp(value):
     return parsed.astimezone(timezone.utc)
 
 
-def validate_data(data):
+def validate_data(data: Record) -> bool:
     """Validate a complete CampusFlow Pro document."""
     if not isinstance(data, dict):
         raise ValueError("Storage must contain a JSON object")
@@ -62,8 +75,8 @@ def validate_data(data):
     if data["schema_version"] != SCHEMA_VERSION:
         raise ValueError("Unsupported schema version")
 
-    tickets = data.get("tickets")
-    events = data.get("events")
+    tickets: Any = data.get("tickets")
+    events: Any = data.get("events")
 
     if not isinstance(tickets, list):
         raise ValueError("Tickets must be a list")
@@ -71,7 +84,7 @@ def validate_data(data):
     if not isinstance(events, list):
         raise ValueError("Events must be a list")
 
-    ticket_ids = set()
+    ticket_ids: set[str | int] = set()
 
     for ticket in tickets:
         if not isinstance(ticket, dict):
@@ -80,7 +93,7 @@ def validate_data(data):
         if not TICKET_FIELDS.issubset(ticket):
             raise ValueError("Ticket is missing required fields")
 
-        ticket_id = ticket["id"]
+        ticket_id: str | int = ticket["id"]
 
         if not isinstance(ticket_id, (str, int)):
             raise ValueError("Invalid ticket ID")
@@ -113,9 +126,15 @@ def validate_data(data):
         if ticket["escalation_cycle"] < 0:
             raise ValueError("Invalid escalation cycle")
 
-        created = validate_timestamp(ticket["created_at"])
-        updated = validate_timestamp(ticket["updated_at"])
-        due = validate_timestamp(ticket["due_at"])
+        created: datetime = validate_timestamp(
+            ticket["created_at"]
+        )
+        updated: datetime = validate_timestamp(
+            ticket["updated_at"]
+        )
+        due: datetime = validate_timestamp(
+            ticket["due_at"]
+        )
 
         if updated < created:
             raise ValueError("Updated time precedes creation")
@@ -123,7 +142,7 @@ def validate_data(data):
         if due < created:
             raise ValueError("Deadline precedes creation")
 
-    event_ids = set()
+    event_ids: set[str | int] = set()
 
     for event in events:
         if not isinstance(event, dict):
@@ -132,7 +151,7 @@ def validate_data(data):
         if not EVENT_FIELDS.issubset(event):
             raise ValueError("Event is missing required fields")
 
-        event_id = event["event_id"]
+        event_id: str | int = event["event_id"]
 
         if not isinstance(event_id, (str, int)) or isinstance(event_id, bool):
             raise ValueError("Invalid event ID")
@@ -161,7 +180,9 @@ def validate_data(data):
             raise ValueError("Event details must be an object")
 
         if event["event_type"] == "ESCALATE":
-            cycle = event["details"].get("escalation_cycle")
+            cycle: Any = event["details"].get(
+                "escalation_cycle"
+            )
 
             if type(cycle) is not int or cycle < 0:
                 raise ValueError("Invalid escalation event cycle")
@@ -169,9 +190,11 @@ def validate_data(data):
     return True
 
 
-def load_data(file_path=DATA_FILE):
+def load_data(
+    file_path: FilePath = DATA_FILE,
+) -> Record:
     """Load and validate schema v2 without changing application state."""
-    path = Path(file_path)
+    path: Path = Path(file_path)
 
     if not path.exists():
         return {
@@ -182,7 +205,7 @@ def load_data(file_path=DATA_FILE):
 
     try:
         with path.open("r", encoding="utf-8") as file:
-            data = json.load(file)
+            data: Record = json.load(file)
     except (json.JSONDecodeError, UnicodeDecodeError) as error:
         raise ValueError("Storage contains invalid JSON") from error
 
@@ -190,9 +213,13 @@ def load_data(file_path=DATA_FILE):
     return data
 
 
-def save_data(tickets, events, file_path=DATA_FILE):
+def save_data(
+    tickets: Records,
+    events: Records,
+    file_path: FilePath = DATA_FILE,
+) -> None:
     """Validate and atomically save schema v2."""
-    data = {
+    data: Record = {
         "schema_version": SCHEMA_VERSION,
         "tickets": tickets,
         "events": events,
@@ -200,10 +227,10 @@ def save_data(tickets, events, file_path=DATA_FILE):
 
     validate_data(data)
 
-    path = Path(file_path)
+    path: Path = Path(file_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    temporary_path = None
+    temporary_path: Path | None = None
 
     try:
         with tempfile.NamedTemporaryFile(
@@ -215,7 +242,12 @@ def save_data(tickets, events, file_path=DATA_FILE):
             delete=False,
         ) as temporary_file:
             temporary_path = Path(temporary_file.name)
-            json.dump(data, temporary_file, indent=4, allow_nan=False)
+            json.dump(
+                data,
+                temporary_file,
+                indent=4,
+                allow_nan=False,
+            )
             temporary_file.flush()
             os.fsync(temporary_file.fileno())
 
@@ -228,16 +260,18 @@ def save_data(tickets, events, file_path=DATA_FILE):
 
 # Original CampusFlow functions retained for compatibility.
 
-def load_tickets(file_path=DATA_FILE):
+def load_tickets(
+    file_path: FilePath = DATA_FILE,
+) -> Records:
     """Load legacy CampusFlow ticket-list storage."""
-    path = Path(file_path)
+    path: Path = Path(file_path)
 
     if not path.exists():
         return []
 
     try:
         with path.open("r", encoding="utf-8") as file:
-            tickets = json.load(file)
+            tickets: Any = json.load(file)
     except json.JSONDecodeError as error:
         raise ValueError(
             "Ticket storage contains invalid JSON"
@@ -249,9 +283,12 @@ def load_tickets(file_path=DATA_FILE):
     return tickets
 
 
-def save_tickets(tickets, file_path=DATA_FILE):
+def save_tickets(
+    tickets: Records,
+    file_path: FilePath = DATA_FILE,
+) -> None:
     """Save legacy CampusFlow ticket-list storage."""
-    path = Path(file_path)
+    path: Path = Path(file_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
     with path.open("w", encoding="utf-8") as file:

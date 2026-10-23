@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from campusflow.knowledge_lab import (
     QUESTIONS,
@@ -18,17 +19,17 @@ from campusflow.knowledge_lab import (
 
 class TestKnowledgeLab(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
-        self.session_dir = Path(self.temp.name)
+        self.session_dir: Path = Path(self.temp.name)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.temp.cleanup()
 
-    def correct_answers(self):
+    def correct_answers(self) -> list[str]:
         return [question["answer"] for question in QUESTIONS]
 
-    def wrong_answers(self):
+    def wrong_answers(self) -> list[str]:
         return [
             next(
                 option for option in question["options"]
@@ -37,9 +38,12 @@ class TestKnowledgeLab(unittest.TestCase):
             for question in QUESTIONS
         ]
 
-    def run_answers(self, answers):
+    def run_answers(
+        self,
+        answers: list[str],
+    ) -> tuple[dict[str, Any], list[str]]:
         values = iter(answers)
-        output = []
+        output: list[str] = []
 
         result = run_quiz(
             input_func=lambda prompt: next(values),
@@ -48,51 +52,51 @@ class TestKnowledgeLab(unittest.TestCase):
         )
         return result, output
 
-    def session_files(self):
+    def session_files(self) -> list[Path]:
         return list(self.session_dir.glob("*.json"))
 
-    def test_ten_questions(self):
+    def test_ten_questions(self) -> None:
         self.assertEqual(len(QUESTIONS), 10)
 
-    def test_correct_answer(self):
+    def test_correct_answer(self) -> None:
         self.assertTrue(check_answer(QUESTIONS[0], "B"))
 
-    def test_lowercase_answer(self):
+    def test_lowercase_answer(self) -> None:
         self.assertTrue(check_answer(QUESTIONS[0], "b"))
 
-    def test_answer_with_spaces(self):
+    def test_answer_with_spaces(self) -> None:
         self.assertTrue(check_answer(QUESTIONS[0], " B "))
 
-    def test_wrong_answer(self):
+    def test_wrong_answer(self) -> None:
         self.assertFalse(check_answer(QUESTIONS[0], "A"))
 
-    def test_non_string_answer(self):
+    def test_non_string_answer(self) -> None:
         self.assertFalse(check_answer(QUESTIONS[0], 123))
 
-    def test_perfect_score(self):
+    def test_perfect_score(self) -> None:
         result = calculate_score(
             QUESTIONS, self.correct_answers()
         )
         self.assertEqual(result["correct"], 10)
         self.assertEqual(result["percentage"], 100.0)
 
-    def test_zero_score(self):
+    def test_zero_score(self) -> None:
         result = calculate_score(
             QUESTIONS, self.wrong_answers()
         )
         self.assertEqual(result["correct"], 0)
         self.assertEqual(result["percentage"], 0.0)
 
-    def test_mismatched_answers(self):
+    def test_mismatched_answers(self) -> None:
         with self.assertRaises(ValueError):
             calculate_score(QUESTIONS, ["A"])
 
-    def test_empty_quiz(self):
+    def test_empty_quiz(self) -> None:
         result = calculate_score([], [])
         self.assertEqual(result["correct"], 0)
         self.assertEqual(result["percentage"], 0.0)
 
-    def test_interactive_quiz(self):
+    def test_interactive_quiz(self) -> None:
         result, output = self.run_answers(
             ["Test Engineer", *self.correct_answers(), "no"]
         )
@@ -103,7 +107,7 @@ class TestKnowledgeLab(unittest.TestCase):
             any("Session saved:" in line for line in output)
         )
 
-    def test_invalid_choice_retried(self):
+    def test_invalid_choice_retried(self) -> None:
         result, output = self.run_answers(
             [
                 "Test Engineer",
@@ -119,7 +123,7 @@ class TestKnowledgeLab(unittest.TestCase):
             output,
         )
 
-    def test_replay_creates_separate_sessions(self):
+    def test_replay_creates_separate_sessions(self) -> None:
         result, output = self.run_answers(
             [
                 "Engineer A",
@@ -140,10 +144,10 @@ class TestKnowledgeLab(unittest.TestCase):
             2,
         )
 
-    def test_session_json_fields(self):
-        answers = self.correct_answers()
+    def test_session_json_fields(self) -> None:
+        answers: list[str] = self.correct_answers()
         result = calculate_score(QUESTIONS, answers)
-        now = datetime(
+        now: datetime = datetime(
             2026, 10, 14, 12, 0, tzinfo=timezone.utc
         )
 
@@ -169,7 +173,7 @@ class TestKnowledgeLab(unittest.TestCase):
         )
         self.assertTrue(saved["session_id"])
 
-    def test_incomplete_session_is_not_saved(self):
+    def test_incomplete_session_is_not_saved(self) -> None:
         with self.assertRaises(ValueError):
             save_quiz_session(
                 "Engineer A",
@@ -180,8 +184,8 @@ class TestKnowledgeLab(unittest.TestCase):
 
         self.assertEqual(self.session_files(), [])
 
-    def test_invalid_result_is_not_saved(self):
-        answers = self.correct_answers()
+    def test_invalid_result_is_not_saved(self) -> None:
+        answers: list[str] = self.correct_answers()
 
         with self.assertRaises(ValueError):
             save_quiz_session(
@@ -193,8 +197,8 @@ class TestKnowledgeLab(unittest.TestCase):
 
         self.assertEqual(self.session_files(), [])
 
-    def test_invalid_participant_is_rejected(self):
-        answers = self.correct_answers()
+    def test_invalid_participant_is_rejected(self) -> None:
+        answers: list[str] = self.correct_answers()
 
         with self.assertRaises(ValueError):
             save_quiz_session(
@@ -206,7 +210,7 @@ class TestKnowledgeLab(unittest.TestCase):
 
         self.assertEqual(self.session_files(), [])
 
-    def test_interrupted_quiz_creates_no_session(self):
+    def test_interrupted_quiz_creates_no_session(self) -> None:
         answers = iter(["Test Engineer", "B"])
 
         with self.assertRaises(StopIteration):

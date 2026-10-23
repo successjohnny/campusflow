@@ -1,44 +1,60 @@
 
+"""Unit tests for CampusFlow Pro ticket management."""
+
 import unittest
+from typing import TypedDict
 
 from tickets import create_ticket, calculate_priority
 
 
+class Ticket(TypedDict):
+    """Represent a ticket used in ticket management tests."""
+
+    id: str
+    title: str
+    category: str
+    urgency: str
+    affected_users: int
+    priority: str
+    status: str
+    assigned_to: str | None
+
+
 class TestTickets(unittest.TestCase):
 
-    def setUp(self):
-        self.tickets = []
+    def setUp(self) -> None:
+        self.tickets: list[Ticket] = []
 
     # Priority calculation tests
 
-    def test_critical_priority(self):
+    def test_critical_priority(self) -> None:
         self.assertEqual(
             calculate_priority("high", 12), "critical"
         )
 
-    def test_high_priority(self):
+    def test_high_priority(self) -> None:
         self.assertEqual(
             calculate_priority("high", 2), "high"
         )
 
-    def test_medium_priority(self):
+    def test_medium_priority(self) -> None:
         self.assertEqual(
             calculate_priority("low", 4), "medium"
         )
 
-    def test_low_priority(self):
+    def test_low_priority(self) -> None:
         self.assertEqual(
             calculate_priority("low", 1), "low"
         )
 
-    def test_exact_critical_boundary(self):
+    def test_exact_critical_boundary(self) -> None:
         self.assertEqual(
             calculate_priority("high", 10), "critical"
         )
 
     # Input validation tests
 
-    def test_zero_users_rejected(self):
+    def test_zero_users_rejected(self) -> None:
         with self.assertRaises(ValueError):
             create_ticket(
                 self.tickets, "Wi-Fi", "Network", "high", 0
@@ -46,7 +62,7 @@ class TestTickets(unittest.TestCase):
 
         self.assertEqual(self.tickets, [])
 
-    def test_negative_affected_users(self):
+    def test_negative_affected_users(self) -> None:
         with self.assertRaises(ValueError):
             create_ticket(
                 self.tickets, "Wi-Fi", "Network", "high", -5
@@ -54,7 +70,7 @@ class TestTickets(unittest.TestCase):
 
         self.assertEqual(self.tickets, [])
 
-    def test_text_affected_users(self):
+    def test_text_affected_users(self) -> None:
         with self.assertRaises(ValueError):
             create_ticket(
                 self.tickets, "Wi-Fi", "Network", "high", "five"
@@ -62,7 +78,7 @@ class TestTickets(unittest.TestCase):
 
         self.assertEqual(self.tickets, [])
 
-    def test_decimal_affected_users(self):
+    def test_decimal_affected_users(self) -> None:
         with self.assertRaises(ValueError):
             create_ticket(
                 self.tickets, "Wi-Fi", "Network", "high", 2.5
@@ -70,7 +86,7 @@ class TestTickets(unittest.TestCase):
 
         self.assertEqual(self.tickets, [])
 
-    def test_boolean_affected_users(self):
+    def test_boolean_affected_users(self) -> None:
         with self.assertRaises(ValueError):
             create_ticket(
                 self.tickets, "Wi-Fi", "Network", "high", True
@@ -78,7 +94,7 @@ class TestTickets(unittest.TestCase):
 
         self.assertEqual(self.tickets, [])
 
-    def test_blank_title_rejected(self):
+    def test_blank_title_rejected(self) -> None:
         with self.assertRaises(ValueError):
             create_ticket(
                 self.tickets, " ", "Network", "low", 2
@@ -86,7 +102,7 @@ class TestTickets(unittest.TestCase):
 
         self.assertEqual(self.tickets, [])
 
-    def test_invalid_category_rejected(self):
+    def test_invalid_category_rejected(self) -> None:
         with self.assertRaises(ValueError):
             create_ticket(
                 self.tickets, "Wi-Fi", "Unknown", "low", 2
@@ -96,7 +112,7 @@ class TestTickets(unittest.TestCase):
 
     # Ticket creation tests
 
-    def test_ticket_creation(self):
+    def test_ticket_creation(self) -> None:
         ticket = create_ticket(
             self.tickets, "Wi-Fi down", "Network", "high", 15
         )
@@ -106,7 +122,7 @@ class TestTickets(unittest.TestCase):
         self.assertEqual(ticket["status"], "open")
         self.assertIsNone(ticket["assigned_to"])
 
-    def test_unique_ticket_ids(self):
+    def test_unique_ticket_ids(self) -> None:
         create_ticket(
             self.tickets, "Wi-Fi", "Network", "high", 15
         )
@@ -117,7 +133,7 @@ class TestTickets(unittest.TestCase):
 
         self.assertEqual(second["id"], "T002")
 
-    def test_case_normalization(self):
+    def test_case_normalization(self) -> None:
         ticket = create_ticket(
             self.tickets, "Laptop", "HARDWARE", "HIGH", 2
         )
@@ -125,7 +141,7 @@ class TestTickets(unittest.TestCase):
         self.assertEqual(ticket["category"], "Hardware")
         self.assertEqual(ticket["urgency"], "high")
 
-    def test_next_id_after_existing_ticket(self):
+    def test_next_id_after_existing_ticket(self) -> None:
         self.tickets.append({
             "id": "T007",
             "title": "Existing",

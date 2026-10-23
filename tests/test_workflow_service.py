@@ -1,7 +1,9 @@
+
 """Tests for CampusFlow Pro workflow services."""
 
 import unittest
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from unittest.mock import Mock
 
 from campusflow.ticket_service import create_ticket_service
@@ -13,14 +15,16 @@ from campusflow.workflow_service import (
 
 class TestWorkflowService(unittest.TestCase):
 
-    def setUp(self):
-        self.tickets = []
-        self.events = []
-        self.now = datetime(
+    def setUp(self) -> None:
+        self.tickets: list[dict[str, Any]] = []
+        self.events: list[dict[str, Any]] = []
+
+        self.now: datetime = datetime(
             2026, 10, 14, 12, 0,
             tzinfo=timezone.utc,
         )
-        self.save = Mock()
+
+        self.save: Mock = Mock()
 
         create_ticket_service(
             tickets=self.tickets,
@@ -36,7 +40,7 @@ class TestWorkflowService(unittest.TestCase):
 
         self.save.reset_mock()
 
-    def test_assign_ticket(self):
+    def test_assign_ticket(self) -> None:
         ticket = assign_ticket_service(
             self.tickets,
             self.events,
@@ -51,7 +55,7 @@ class TestWorkflowService(unittest.TestCase):
         self.assertEqual(self.events[-1]["event_type"], "ASSIGN")
         self.save.assert_called_once()
 
-    def test_start_ticket(self):
+    def test_start_ticket(self) -> None:
         assign_ticket_service(
             self.tickets,
             self.events,
@@ -73,7 +77,7 @@ class TestWorkflowService(unittest.TestCase):
         self.assertEqual(ticket["status"], "in_progress")
         self.assertEqual(self.events[-1]["event_type"], "START")
 
-    def test_resolve_ticket(self):
+    def test_resolve_ticket(self) -> None:
         assign_ticket_service(
             self.tickets,
             self.events,
@@ -104,7 +108,7 @@ class TestWorkflowService(unittest.TestCase):
         self.assertEqual(ticket["status"], "resolved")
         self.assertEqual(self.events[-1]["event_type"], "RESOLVE")
 
-    def test_reopen_ticket_recalculates_sla(self):
+    def test_reopen_ticket_recalculates_sla(self) -> None:
         assign_ticket_service(
             self.tickets,
             self.events,
@@ -149,8 +153,8 @@ class TestWorkflowService(unittest.TestCase):
         )
         self.assertEqual(self.events[-1]["event_type"], "REOPEN")
 
-    def test_invalid_transition_preserves_state(self):
-        original_events = len(self.events)
+    def test_invalid_transition_preserves_state(self) -> None:
+        original_events: int = len(self.events)
 
         with self.assertRaises(ValueError):
             change_status_service(
@@ -165,7 +169,7 @@ class TestWorkflowService(unittest.TestCase):
         self.assertEqual(self.tickets[0]["status"], "open")
         self.assertEqual(len(self.events), original_events)
 
-    def test_failed_save_preserves_state(self):
+    def test_failed_save_preserves_state(self) -> None:
         self.save.side_effect = OSError("Disk failure")
 
         with self.assertRaises(OSError):
@@ -181,7 +185,7 @@ class TestWorkflowService(unittest.TestCase):
         self.assertIsNone(self.tickets[0]["assigned_to"])
         self.assertEqual(len(self.events), 1)
 
-    def test_cannot_start_unassigned_ticket(self):
+    def test_cannot_start_unassigned_ticket(self) -> None:
         with self.assertRaises(ValueError):
             change_status_service(
                 self.tickets,
@@ -192,7 +196,7 @@ class TestWorkflowService(unittest.TestCase):
                 save_func=self.save,
             )
 
-    def test_cannot_assign_resolved_ticket(self):
+    def test_cannot_assign_resolved_ticket(self) -> None:
         assign_ticket_service(
             self.tickets,
             self.events,

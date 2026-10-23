@@ -1,4 +1,12 @@
-def assign_ticket(tickets, ticket_id, staff_name):
+"""Original CampusFlow ticket assignment and status transitions."""
+
+from typing import Any, TypeAlias
+
+Ticket: TypeAlias = dict[str, Any]
+Tickets: TypeAlias = list[Ticket]
+
+
+def assign_ticket(tickets: Tickets, ticket_id: str | int, staff_name: str) -> Ticket:
     # Check that the staff name is valid
     if not isinstance(staff_name, str) or not staff_name.strip():
         raise ValueError("Staff name cannot be empty")
@@ -19,9 +27,9 @@ def assign_ticket(tickets, ticket_id, staff_name):
     raise ValueError("Ticket not found")
 
 
-def change_status(tickets, ticket_id, new_status):
+def change_status(tickets: Tickets, ticket_id: str | int, new_status: str) -> Ticket:
     # Define allowed status transitions
-    allowed = {
+    allowed: dict[str, list[str]] = {
         "open": ["in_progress"],
         "in_progress": ["resolved"],
         "resolved": ["open"]
@@ -37,7 +45,7 @@ def change_status(tickets, ticket_id, new_status):
     for ticket in tickets:
         if ticket["id"] == ticket_id:
 
-            current_status = ticket["status"]
+            current_status: str = ticket["status"]
 
             # Check if the current status is valid
             if current_status not in allowed:

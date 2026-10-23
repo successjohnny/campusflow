@@ -2,10 +2,20 @@
 """SLA deadline calculations and escalation for CampusFlow Pro."""
 
 from datetime import datetime, timedelta, timezone
+from typing import Any, TypedDict
 from uuid import uuid4
 
 
-SLA_MINUTES = {
+Ticket = dict[str, Any]
+Event = dict[str, Any]
+
+
+class EscalationResult(TypedDict):
+    newly_escalated: int
+    already_escalated: int
+
+
+SLA_MINUTES: dict[str, int] = {
     "critical": 60,
     "high": 240,
     "medium": 1440,
@@ -13,7 +23,10 @@ SLA_MINUTES = {
 }
 
 
-def require_aware_datetime(value, name):
+def require_aware_datetime(
+    value: datetime,
+    name: str,
+) -> datetime:
     """Validate and normalize a datetime to UTC."""
     if not isinstance(value, datetime):
         raise TypeError(f"{name} must be a datetime")
@@ -24,34 +37,49 @@ def require_aware_datetime(value, name):
     return value.astimezone(timezone.utc)
 
 
-def calculate_due_at(priority, cycle_start):
+def calculate_due_at(
+    priority: str,
+    cycle_start: datetime,
+) -> str:
     """Calculate the SLA deadline in UTC."""
     if priority not in SLA_MINUTES:
         raise ValueError("Invalid ticket priority")
 
-    start = require_aware_datetime(cycle_start, "cycle_start")
+    start: datetime = require_aware_datetime(
+        cycle_start, "cycle_start"
+    )
 
-    deadline = start + timedelta(minutes=SLA_MINUTES[priority])
+    deadline: datetime = start + timedelta(
+        minutes=SLA_MINUTES[priority]
+    )
 
     return deadline.isoformat()
 
 
-def is_overdue(ticket, now):
+def is_overdue(
+    ticket: Ticket,
+    now: datetime,
+) -> bool:
     """Check whether an unresolved ticket is past its SLA deadline."""
     if ticket["status"] == "resolved":
         return False
 
-    current = require_aware_datetime(now, "now")
+    current: datetime = require_aware_datetime(now, "now")
 
-    due_at = datetime.fromisoformat(ticket["due_at"])
+    due_at: datetime = datetime.fromisoformat(ticket["due_at"])
     due_at = require_aware_datetime(due_at, "due_at")
 
     return current > due_at
 
 
-def escalate_overdue(tickets, events, now, actor):
+def escalate_overdue(
+    tickets: list[Ticket],
+    events: list[Event],
+    now: datetime,
+    actor: str,
+) -> EscalationResult:
     """Create one escalation event per overdue ticket per SLA cycle."""
-    current = require_aware_datetime(now, "now")
+    current: datetime = require_aware_datetime(now, "now")
 
     if not isinstance(actor, str) or not actor.strip():
         raise ValueError("Actor must be a non-empty string")
@@ -61,8 +89,8 @@ def escalate_overdue(tickets, events, now, actor):
 
     actor = actor.strip()
 
-    existing_ids = set()
-    escalated_cycles = set()
+    existing_ids: set[str] = set()
+    escalated_cycles: set[tuple[str | int, int]] = set()
 
     # Validate existing escalation events before making changes.
     for event in events:
@@ -92,9 +120,9 @@ def escalate_overdue(tickets, events, now, actor):
 
             escalated_cycles.add((event["ticket_id"], cycle))
 
-    pending = []
-    already = 0
-    seen_tickets = set()
+    pending: list[Event] = []
+    already: int = 0
+    seen_tickets: set[str | int] = set()
 
     # Validate all tickets before appending any events.
     for ticket in tickets:
@@ -121,7 +149,7 @@ def escalate_overdue(tickets, events, now, actor):
             already += 1
             continue
 
-        event = {
+        event: Event = {
             "event_id": str(uuid4()),
             "ticket_id": ticket_id,
             "event_type": "ESCALATE",

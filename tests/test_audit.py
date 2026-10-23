@@ -1,3 +1,4 @@
+
 """Tests for CampusFlow Pro audit event recording."""
 
 import unittest
@@ -9,7 +10,7 @@ from campusflow.audit import record_event, get_ticket_history
 
 class TestAuditEvents(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.events = []
 
         self.now = datetime(
@@ -17,7 +18,7 @@ class TestAuditEvents(unittest.TestCase):
             tzinfo=timezone.utc
         )
 
-    def test_create_event(self):
+    def test_create_event(self) -> None:
         event = record_event(
             self.events,
             "T001",
@@ -38,7 +39,7 @@ class TestAuditEvents(unittest.TestCase):
             "2026-10-14T10:00:00+00:00",
         )
 
-    def test_invalid_actor_does_not_append(self):
+    def test_invalid_actor_does_not_append(self) -> None:
         with self.assertRaises(ValueError):
             record_event(
                 self.events,
@@ -52,7 +53,7 @@ class TestAuditEvents(unittest.TestCase):
 
         self.assertEqual(len(self.events), 0)
 
-    def test_invalid_event_type_does_not_append(self):
+    def test_invalid_event_type_does_not_append(self) -> None:
         with self.assertRaises(ValueError):
             record_event(
                 self.events,
@@ -66,7 +67,7 @@ class TestAuditEvents(unittest.TestCase):
 
         self.assertEqual(len(self.events), 0)
 
-    def test_naive_datetime_rejected(self):
+    def test_naive_datetime_rejected(self) -> None:
         naive_time = datetime(2026, 10, 14, 10, 0)
 
         with self.assertRaises(ValueError):
@@ -82,7 +83,7 @@ class TestAuditEvents(unittest.TestCase):
 
         self.assertEqual(len(self.events), 0)
 
-    def test_event_ids_are_unique(self):
+    def test_event_ids_are_unique(self) -> None:
         first = record_event(
             self.events,
             "T001",
@@ -108,7 +109,7 @@ class TestAuditEvents(unittest.TestCase):
             second["event_id"],
         )
 
-    def test_ticket_history_chronological(self):
+    def test_ticket_history_chronological(self) -> None:
         later = datetime(
             2026, 10, 14, 12, 0,
             tzinfo=timezone.utc
@@ -154,7 +155,7 @@ class TestAuditEvents(unittest.TestCase):
             "ASSIGN",
         )
 
-    def test_history_excludes_other_tickets(self):
+    def test_history_excludes_other_tickets(self) -> None:
         record_event(
             self.events,
             "T001",
@@ -183,7 +184,9 @@ class TestAuditEvents(unittest.TestCase):
         self.assertEqual(len(history), 1)
         self.assertEqual(history[0]["ticket_id"], "T001")
 
-    def test_history_breaks_timestamp_ties_by_event_id(self):
+    def test_history_breaks_timestamp_ties_by_event_id(
+        self,
+    ) -> None:
         record_event(
             self.events,
             "T001",

@@ -1,6 +1,25 @@
 """Reporting and ticket queues for CampusFlow Pro."""
 
 from datetime import datetime, timezone
+from typing import Any, TypeAlias, TypedDict
+
+
+Ticket: TypeAlias = dict[str, Any]
+Event: TypeAlias = dict[str, Any]
+
+
+class StandardReport(TypedDict):
+    total: int
+    by_status: dict[str, int]
+    by_priority: dict[str, int]
+
+
+class EnhancedReport(TypedDict):
+    overdue_total: int
+    overdue_by_priority: dict[str, int]
+    average_resolution_hours: float
+    staff_workload: dict[str, int]
+    resolution_rate_percent: float
 
 
 PRIORITY_ORDER = {
@@ -11,10 +30,10 @@ PRIORITY_ORDER = {
 }
 
 
-def get_priority_queue(tickets):
+def get_priority_queue(tickets: list[Ticket]) -> list[Ticket]:
     """Return open tickets sorted by priority and numeric ticket ID."""
 
-    open_tickets = [
+    open_tickets: list[Ticket] = [
         ticket for ticket in tickets
         if ticket["status"] == "open"
     ]
@@ -28,7 +47,7 @@ def get_priority_queue(tickets):
     )
 
 
-def _utc_datetime(value, name):
+def _utc_datetime(value: datetime | str, name: str) -> datetime:
     """Convert an aware datetime or ISO timestamp to UTC."""
 
     if isinstance(value, str):
@@ -46,26 +65,29 @@ def _utc_datetime(value, name):
     return value.astimezone(timezone.utc)
 
 
-def get_sla_attention_queue(tickets, now):
+def get_sla_attention_queue(
+    tickets: list[Ticket],
+    now: datetime | str,
+) -> list[Ticket]:
     """Return unresolved tickets ordered by SLA urgency."""
 
     if not isinstance(tickets, list):
         raise TypeError("Tickets must be a list")
 
-    current = _utc_datetime(now, "now")
+    current: datetime = _utc_datetime(now, "now")
 
-    attention_queue = []
+    attention_queue: list[tuple[int, datetime, int, Ticket]] = []
 
     for ticket in tickets:
         if ticket["status"] == "resolved":
             continue
 
-        deadline = _utc_datetime(
+        deadline: datetime = _utc_datetime(
             ticket["due_at"],
             "due_at",
         )
 
-        overdue_rank = 0 if current > deadline else 1
+        overdue_rank: int = 0 if current > deadline else 1
 
         attention_queue.append(
             (
@@ -90,10 +112,10 @@ def get_sla_attention_queue(tickets, now):
     ]
 
 
-def generate_report(tickets):
+def generate_report(tickets: list[Ticket]) -> StandardReport:
     """Generate original ticket counts by status and priority."""
 
-    report = {
+    report: StandardReport = {
         "total": len(tickets),
         "by_status": {
             "open": 0,
@@ -109,8 +131,8 @@ def generate_report(tickets):
     }
 
     for ticket in tickets:
-        status = ticket["status"]
-        priority = ticket["priority"]
+        status: str = ticket["status"]
+        priority: str = ticket["priority"]
 
         report["by_status"][status] += 1
         report["by_priority"][priority] += 1
@@ -118,7 +140,11 @@ def generate_report(tickets):
     return report
 
 
-def generate_enhanced_report(tickets, events, now):
+def generate_enhanced_report(
+    tickets: list[Ticket],
+    events: list[Event],
+    now: datetime | str,
+) -> EnhancedReport:
     """Calculate SLA, resolution, and staff workload statistics."""
 
     if not isinstance(tickets, list):
@@ -127,9 +153,9 @@ def generate_enhanced_report(tickets, events, now):
     if not isinstance(events, list):
         raise TypeError("Events must be a list")
 
-    current = _utc_datetime(now, "now")
+    current: datetime = _utc_datetime(now, "now")
 
-    report = {
+    report: EnhancedReport = {
         "overdue_total": 0,
         "overdue_by_priority": {
             "critical": 0,
@@ -142,15 +168,15 @@ def generate_enhanced_report(tickets, events, now):
         "resolution_rate_percent": 0.0,
     }
 
-    latest_resolutions = {}
+    latest_resolutions: dict[str | int, datetime] = {}
 
     for event in events:
         if event["event_type"] != "RESOLVE":
             continue
 
-        ticket_id = event["ticket_id"]
+        ticket_id: str | int = event["ticket_id"]
 
-        resolved_at = _utc_datetime(
+        resolved_at: datetime = _utc_datetime(
             event["timestamp"],
             "event timestamp",
         )
@@ -160,11 +186,11 @@ def generate_enhanced_report(tickets, events, now):
         if previous is None or resolved_at > previous:
             latest_resolutions[ticket_id] = resolved_at
 
-    resolved_count = 0
-    resolution_hours = []
+    resolved_count: int = 0
+    resolution_hours: list[float] = []
 
     for ticket in tickets:
-        status = ticket["status"]
+        status: str = ticket["status"]
 
         if status == "resolved":
             resolved_count += 1
@@ -174,7 +200,7 @@ def generate_enhanced_report(tickets, events, now):
             )
 
             if resolved_at is not None:
-                created_at = _utc_datetime(
+                created_at: datetime = _utc_datetime(
                     ticket["created_at"],
                     "created_at",
                 )
@@ -192,7 +218,7 @@ def generate_enhanced_report(tickets, events, now):
 
             continue
 
-        deadline = _utc_datetime(
+        deadline: datetime = _utc_datetime(
             ticket["due_at"],
             "due_at",
         )
@@ -200,11 +226,11 @@ def generate_enhanced_report(tickets, events, now):
         if current > deadline:
             report["overdue_total"] += 1
 
-            priority = ticket["priority"]
+            priority: str = ticket["priority"]
 
             report["overdue_by_priority"][priority] += 1
 
-        staff_name = ticket.get("assigned_to")
+        staff_name: str | None = ticket.get("assigned_to")
 
         if staff_name:
             report["staff_workload"][staff_name] = (

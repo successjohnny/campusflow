@@ -1,5 +1,5 @@
 
-def borrow_resource(available, requested):
+def borrow_resource(available: int, requested: object) -> int:
     """Validate a request before changing stock."""
 
     if type(requested) is not int or requested <= 0:
@@ -15,12 +15,14 @@ def borrow_resource(available, requested):
     return available - requested
 
 
-def run_experiment(available, requested):
+def run_experiment(available: int, requested: object) -> None:
+    """Test borrowing and handle invalid requests."""
+
     print(f"\nAvailable: {available}")
     print(f"Requested: {requested}")
 
     try:
-        remaining = borrow_resource(available, requested)
+        remaining: int = borrow_resource(available, requested)
 
     except ValueError as error:
         print("Error caught:", error)

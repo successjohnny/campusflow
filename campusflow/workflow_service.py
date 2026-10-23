@@ -1,15 +1,26 @@
 """Safe ticket workflow operations for CampusFlow Pro."""
 
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timezone
+from typing import Any, TypeAlias
 
 from campusflow.audit import record_event
 from campusflow.sla import calculate_due_at
 from campusflow.workflow import assign_ticket, change_status
 from storage import save_data
 
+Ticket: TypeAlias = dict[str, Any]
+Event: TypeAlias = dict[str, Any]
+SaveFunction: TypeAlias = Callable[[list[Ticket], list[Event]], None]
 
-def _prepare(tickets, events, actor, now):
+
+def _prepare(
+    tickets: list[Ticket],
+    events: list[Event],
+    actor: str,
+    now: datetime | None,
+) -> tuple[list[Ticket], list[Event], datetime]:
     """Validate common inputs and create working copies."""
 
     if not isinstance(tickets, list) or not isinstance(events, list):
@@ -34,7 +45,13 @@ def _prepare(tickets, events, actor, now):
     )
 
 
-def _save_changes(tickets, events, new_tickets, new_events, save_func):
+def _save_changes(
+    tickets: list[Ticket],
+    events: list[Event],
+    new_tickets: list[Ticket],
+    new_events: list[Event],
+    save_func: SaveFunction | None,
+) -> None:
     """Persist changes before updating live application state."""
 
     if save_func is None:
@@ -47,14 +64,14 @@ def _save_changes(tickets, events, new_tickets, new_events, save_func):
 
 
 def assign_ticket_service(
-    tickets,
-    events,
-    ticket_id,
-    staff_name,
-    actor="System",
-    now=None,
-    save_func=None,
-):
+    tickets: list[Ticket],
+    events: list[Event],
+    ticket_id: str,
+    staff_name: str,
+    actor: str = "System",
+    now: datetime | None = None,
+    save_func: SaveFunction | None = None,
+) -> Ticket:
     """Assign a ticket and record an ASSIGN audit event."""
 
     new_tickets, new_events, current = _prepare(
@@ -84,14 +101,14 @@ def assign_ticket_service(
 
 
 def change_status_service(
-    tickets,
-    events,
-    ticket_id,
-    new_status,
-    actor="System",
-    now=None,
-    save_func=None,
-):
+    tickets: list[Ticket],
+    events: list[Event],
+    ticket_id: str,
+    new_status: str,
+    actor: str = "System",
+    now: datetime | None = None,
+    save_func: SaveFunction | None = None,
+) -> Ticket:
     """Change status and record a workflow audit event."""
 
     new_tickets, new_events, current = _prepare(

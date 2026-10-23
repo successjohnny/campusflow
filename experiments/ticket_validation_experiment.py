@@ -1,21 +1,31 @@
 
+from typing import Any
+
 from tickets import create_ticket
 
-tickets = []
 
-print("Before:", tickets)
+def main() -> None:
+    """Verify that invalid ticket creation does not change data."""
 
-try:
-    create_ticket(
-        tickets,
-        "Wi-Fi is down",
-        "Network",
-        "high",
-        0
-    )
+    tickets: list[dict[str, Any]] = []
 
-except ValueError as error:
-    print("Caught error:", error)
+    print("Before:", tickets)
 
-print("After:", tickets)
-print("List unchanged:", tickets == [])
+    try:
+        create_ticket(
+            tickets,
+            "Wi-Fi is down",
+            "Network",
+            "high",
+            0,
+        )
+
+    except ValueError as error:
+        print("Caught error:", error)
+
+    print("After:", tickets)
+    print("List unchanged:", tickets == [])
+
+
+if __name__ == "__main__":
+    main()

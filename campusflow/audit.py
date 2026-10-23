@@ -1,10 +1,16 @@
 """Audit event recording and ticket history for CampusFlow Pro."""
 
 from datetime import datetime, timezone
+from typing import Any, TypeAlias
 from uuid import uuid4
 
 
-EVENT_TYPES = {
+Event: TypeAlias = dict[str, Any]
+Events: TypeAlias = list[Event]
+TicketId: TypeAlias = str | int
+
+
+EVENT_TYPES: set[str] = {
     "CREATE",
     "ASSIGN",
     "START",
@@ -12,7 +18,7 @@ EVENT_TYPES = {
     "REOPEN",
 }
 
-VALID_STATUSES = {
+VALID_STATUSES: set[str] = {
     "open",
     "in_progress",
     "resolved",
@@ -20,15 +26,15 @@ VALID_STATUSES = {
 
 
 def record_event(
-    events,
-    ticket_id,
-    event_type,
-    actor,
-    before_status,
-    after_status,
-    details=None,
-    now=None,
-):
+    events: Events,
+    ticket_id: TicketId,
+    event_type: str,
+    actor: str,
+    before_status: str | None,
+    after_status: str | None,
+    details: dict[str, Any] | None = None,
+    now: datetime | None = None,
+) -> Event:
     """Validate and append a successful ticket operation event."""
 
     if not isinstance(events, list):
@@ -66,9 +72,9 @@ def record_event(
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("Timestamp must be timezone-aware")
 
-    timestamp = now.astimezone(timezone.utc).isoformat()
+    timestamp: str = now.astimezone(timezone.utc).isoformat()
 
-    event = {
+    event: Event = {
         "event_id": str(uuid4()),
         "ticket_id": ticket_id,
         "event_type": event_type,
@@ -84,10 +90,10 @@ def record_event(
     return event
 
 
-def get_ticket_history(events, ticket_id):
+def get_ticket_history(events: Events, ticket_id: TicketId) -> Events:
     """Return one ticket's events in chronological order."""
 
-    history = [
+    history: Events = [
         event
         for event in events
         if event["ticket_id"] == ticket_id

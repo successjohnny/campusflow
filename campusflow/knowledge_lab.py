@@ -4,13 +4,31 @@
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Callable, TypedDict
 from uuid import uuid4
 
 
-SESSION_DIR = Path("data/knowledge_lab_sessions")
+class Question(TypedDict):
+    question: str
+    options: dict[str, str]
+    answer: str
+    explanation: str
 
 
-QUESTIONS = [
+class QuizResult(TypedDict):
+    correct: int
+    total: int
+    percentage: float
+
+
+InputFunction = Callable[[str], str]
+PrintFunction = Callable[[str], Any]
+
+
+SESSION_DIR: Path = Path("data/knowledge_lab_sessions")
+
+
+QUESTIONS: list[Question] = [
     {
         "question": "What does SLA stand for?",
         "options": {
@@ -152,7 +170,7 @@ QUESTIONS = [
 ]
 
 
-def check_answer(question, answer):
+def check_answer(question: Question, answer: str) -> bool:
     """Return True when an answer matches the correct option."""
     if not isinstance(answer, str):
         return False
@@ -160,7 +178,7 @@ def check_answer(question, answer):
     return answer.strip().upper() == question["answer"]
 
 
-def calculate_score(questions, answers):
+def calculate_score(questions: list[Question], answers: list[str]) -> QuizResult:
     """Return the number correct, total, and percentage."""
     if len(questions) != len(answers):
         raise ValueError(
@@ -183,12 +201,12 @@ def calculate_score(questions, answers):
 
 
 def save_quiz_session(
-    participant,
-    answers,
-    result,
-    session_dir=None,
-    now=None,
-):
+    participant: str,
+    answers: list[str],
+    result: QuizResult,
+    session_dir: str | Path | None = None,
+    now: datetime | None = None,
+) -> Path:
     """Save one completed quiz attempt to a separate JSON file."""
     if not isinstance(participant, str) or not participant.strip():
         raise ValueError("Participant name cannot be empty")
@@ -237,7 +255,11 @@ def save_quiz_session(
     return path
 
 
-def run_quiz(input_func=input, print_func=print, session_dir=None):
+def run_quiz(
+    input_func: InputFunction = input,
+    print_func: PrintFunction = print,
+    session_dir: str | Path | None = None,
+) -> QuizResult:
     """Run the Knowledge Lab and save each completed attempt."""
     while True:
         print_func("\n===== CAMPUSFLOW KNOWLEDGE LAB =====")

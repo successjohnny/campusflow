@@ -1,6 +1,8 @@
+
 """Tests for CampusFlow Pro duplicate ticket detection."""
 
 import unittest
+from typing import TypedDict
 
 from campusflow.duplicates import (
     normalize_title,
@@ -8,10 +10,17 @@ from campusflow.duplicates import (
 )
 
 
+class Ticket(TypedDict):
+    id: str
+    title: str
+    category: str
+    status: str
+
+
 class TestDuplicateDetection(unittest.TestCase):
 
-    def setUp(self):
-        self.tickets = [
+    def setUp(self) -> None:
+        self.tickets: list[Ticket] = [
             {
                 "id": "T001",
                 "title": "Network Connection Failure",
@@ -32,8 +41,8 @@ class TestDuplicateDetection(unittest.TestCase):
             },
         ]
 
-    def test_normalize_title(self):
-        result = normalize_title(
+    def test_normalize_title(self) -> None:
+        result: str = normalize_title(
             "  NETWORK    Connection   Failure  "
         )
 
@@ -42,7 +51,7 @@ class TestDuplicateDetection(unittest.TestCase):
             "network connection failure",
         )
 
-    def test_case_insensitive_duplicate(self):
+    def test_case_insensitive_duplicate(self) -> None:
         duplicates = detect_duplicates(
             self.tickets,
             "Network",
@@ -52,7 +61,7 @@ class TestDuplicateDetection(unittest.TestCase):
         self.assertEqual(len(duplicates), 1)
         self.assertEqual(duplicates[0]["id"], "T001")
 
-    def test_repeated_whitespace_duplicate(self):
+    def test_repeated_whitespace_duplicate(self) -> None:
         duplicates = detect_duplicates(
             self.tickets,
             "Network",
@@ -61,7 +70,7 @@ class TestDuplicateDetection(unittest.TestCase):
 
         self.assertEqual(len(duplicates), 1)
 
-    def test_in_progress_ticket_is_duplicate(self):
+    def test_in_progress_ticket_is_duplicate(self) -> None:
         duplicates = detect_duplicates(
             self.tickets,
             "Hardware",
@@ -71,7 +80,7 @@ class TestDuplicateDetection(unittest.TestCase):
         self.assertEqual(len(duplicates), 1)
         self.assertEqual(duplicates[0]["id"], "T002")
 
-    def test_resolved_ticket_is_not_duplicate(self):
+    def test_resolved_ticket_is_not_duplicate(self) -> None:
         duplicates = detect_duplicates(
             self.tickets,
             "Software",
@@ -80,7 +89,7 @@ class TestDuplicateDetection(unittest.TestCase):
 
         self.assertEqual(duplicates, [])
 
-    def test_different_category_is_not_duplicate(self):
+    def test_different_category_is_not_duplicate(self) -> None:
         duplicates = detect_duplicates(
             self.tickets,
             "Hardware",
@@ -89,7 +98,7 @@ class TestDuplicateDetection(unittest.TestCase):
 
         self.assertEqual(duplicates, [])
 
-    def test_invalid_title(self):
+    def test_invalid_title(self) -> None:
         with self.assertRaises(ValueError):
             detect_duplicates(
                 self.tickets,
@@ -97,7 +106,7 @@ class TestDuplicateDetection(unittest.TestCase):
                 "   ",
             )
 
-    def test_multiple_duplicates(self):
+    def test_multiple_duplicates(self) -> None:
         self.tickets.append(
             {
                 "id": "T004",
@@ -118,8 +127,8 @@ class TestDuplicateDetection(unittest.TestCase):
             ["T001", "T004"],
         )
 
-    def test_detection_does_not_modify_tickets(self):
-        original = [
+    def test_detection_does_not_modify_tickets(self) -> None:
+        original: list[Ticket] = [
             ticket.copy()
             for ticket in self.tickets
         ]

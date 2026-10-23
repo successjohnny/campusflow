@@ -1,7 +1,9 @@
 """Ticket creation service for CampusFlow Pro."""
 
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timezone
+from typing import Any, TypedDict
 
 from tickets import create_ticket
 from storage import save_data
@@ -11,18 +13,31 @@ from campusflow.duplicates import detect_duplicates
 from campusflow.sla import calculate_due_at
 
 
+Ticket = dict[str, Any]
+Event = dict[str, Any]
+SaveFunction = Callable[[list[Ticket], list[Event]], None]
+
+
+class CreateTicketResult(TypedDict):
+    """Result returned after attempting to create a ticket."""
+
+    created: bool
+    duplicates: list[Ticket]
+    ticket: Ticket | None
+
+
 def create_ticket_service(
-    tickets,
-    events,
-    title,
-    category,
-    urgency,
-    affected_users,
-    actor="System",
-    confirm_duplicate=False,
-    now=None,
-    save_func=None,
-):
+    tickets: list[Ticket],
+    events: list[Event],
+    title: str,
+    category: str,
+    urgency: str,
+    affected_users: int,
+    actor: str = "System",
+    confirm_duplicate: bool = False,
+    now: datetime | None = None,
+    save_func: SaveFunction | None = None,
+) -> CreateTicketResult:
     """Create a ticket with SLA, audit logging, and safe persistence."""
 
     if now is None:
@@ -41,7 +56,7 @@ def create_ticket_service(
         raise TypeError("Tickets and events must be lists")
 
     # Check for duplicate tickets before creating anything.
-    duplicates = detect_duplicates(tickets, category, title)
+    duplicates: list[Ticket] = detect_duplicates(tickets, category, title)
 
     if duplicates and not confirm_duplicate:
         return {
@@ -51,10 +66,10 @@ def create_ticket_service(
         }
 
     # Work with copies to protect the live application state.
-    new_tickets = deepcopy(tickets)
-    new_events = deepcopy(events)
+    new_tickets: list[Ticket] = deepcopy(tickets)
+    new_events: list[Event] = deepcopy(events)
 
-    ticket = create_ticket(
+    ticket: Ticket = create_ticket(
         new_tickets,
         title,
         category,

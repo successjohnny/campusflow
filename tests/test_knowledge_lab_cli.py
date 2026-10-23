@@ -1,7 +1,8 @@
+
 """Integration tests for the Knowledge Lab CLI."""
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import main
 
@@ -9,7 +10,10 @@ import main
 class TestKnowledgeLabCLI(unittest.TestCase):
 
     @patch("main.run_quiz")
-    def test_knowledge_lab_menu_launches_quiz(self, mock_quiz):
+    def test_knowledge_lab_menu_launches_quiz(
+        self,
+        mock_quiz: Mock,
+    ) -> None:
         """Selecting the Knowledge Lab handler launches the quiz."""
 
         main.knowledge_lab_menu()
@@ -17,7 +21,10 @@ class TestKnowledgeLabCLI(unittest.TestCase):
         mock_quiz.assert_called_once_with()
 
     @patch("builtins.print")
-    def test_main_menu_displays_knowledge_lab(self, mock_print):
+    def test_main_menu_displays_knowledge_lab(
+        self,
+        mock_print: Mock,
+    ) -> None:
         """The main menu includes Knowledge Lab as option 8."""
 
         main.show_menu()
@@ -37,11 +44,11 @@ class TestKnowledgeLabCLI(unittest.TestCase):
     @patch("builtins.print")
     def test_option_eight_returns_to_main_menu(
         self,
-        mock_print,
-        mock_input,
-        mock_quiz,
-        mock_load,
-    ):
+        mock_print: Mock,
+        mock_input: Mock,
+        mock_quiz: Mock,
+        mock_load: Mock,
+    ) -> None:
         """After the quiz finishes, the main menu remains available."""
 
         main.main()

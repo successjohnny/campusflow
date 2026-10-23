@@ -1,9 +1,33 @@
 
-VALID_CATEGORIES = ("Network", "Hardware", "Software", "Other")
-VALID_URGENCIES = ("low", "medium", "high")
+from typing import TypedDict
 
 
-def calculate_priority(urgency, affected_users):
+class Ticket(TypedDict):
+    id: str
+    title: str
+    category: str
+    urgency: str
+    affected_users: int
+    priority: str
+    status: str
+    assigned_to: str | None
+
+
+VALID_CATEGORIES: tuple[str, ...] = (
+    "Network",
+    "Hardware",
+    "Software",
+    "Other",
+)
+
+VALID_URGENCIES: tuple[str, ...] = (
+    "low",
+    "medium",
+    "high",
+)
+
+
+def calculate_priority(urgency: str, affected_users: int) -> str:
     """Calculate priority using CampusFlow's four rules."""
 
     if urgency not in VALID_URGENCIES:
@@ -24,7 +48,13 @@ def calculate_priority(urgency, affected_users):
     return "low"
 
 
-def create_ticket(tickets, title, category, urgency, affected_users):
+def create_ticket(
+    tickets: list[Ticket],
+    title: str,
+    category: str,
+    urgency: str,
+    affected_users: int,
+) -> Ticket:
     """Validate inputs and create a new ticket."""
 
     if not isinstance(title, str) or not title.strip():
@@ -35,11 +65,11 @@ def create_ticket(tickets, title, category, urgency, affected_users):
 
     category = category.strip().lower()
 
-    categories = {
+    categories: dict[str, str] = {
         "network": "Network",
         "hardware": "Hardware",
         "software": "Software",
-        "other": "Other"
+        "other": "Other",
     }
 
     if category not in categories:
@@ -50,14 +80,14 @@ def create_ticket(tickets, title, category, urgency, affected_users):
 
     urgency = urgency.strip().lower()
 
-    priority = calculate_priority(urgency, affected_users)
+    priority: str = calculate_priority(urgency, affected_users)
 
-    next_id = max(
+    next_id: int = max(
         (int(ticket["id"][1:]) for ticket in tickets),
-        default=0
+        default=0,
     ) + 1
 
-    ticket = {
+    ticket: Ticket = {
         "id": f"T{next_id:03d}",
         "title": title.strip(),
         "category": categories[category],
@@ -65,7 +95,7 @@ def create_ticket(tickets, title, category, urgency, affected_users):
         "affected_users": affected_users,
         "priority": priority,
         "status": "open",
-        "assigned_to": None
+        "assigned_to": None,
     }
 
     tickets.append(ticket)
