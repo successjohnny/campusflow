@@ -1,3 +1,4 @@
+
 """Ticket creation service for CampusFlow Pro."""
 
 from collections.abc import Callable
@@ -5,6 +6,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Any, TypedDict
 
+from tickets import Ticket as BaseTicket
 from tickets import create_ticket
 from storage import save_data
 
@@ -55,8 +57,11 @@ def create_ticket_service(
     if not isinstance(tickets, list) or not isinstance(events, list):
         raise TypeError("Tickets and events must be lists")
 
-    # Check for duplicate tickets before creating anything.
-    duplicates: list[Ticket] = detect_duplicates(tickets, category, title)
+    duplicates: list[Ticket] = detect_duplicates(
+        tickets,
+        category,
+        title,
+    )
 
     if duplicates and not confirm_duplicate:
         return {
@@ -65,23 +70,45 @@ def create_ticket_service(
             "ticket": None,
         }
 
-    # Work with copies to protect the live application state.
+    # Preserve original state until persistence succeeds.
     new_tickets: list[Ticket] = deepcopy(tickets)
     new_events: list[Event] = deepcopy(events)
 
-    ticket: Ticket = create_ticket(
-        new_tickets,
+    # Build a typed view for the original ticket creation function.
+    typed_tickets: list[BaseTicket] = [
+        {
+            "id": item["id"],
+            "title": item["title"],
+            "category": item["category"],
+            "urgency": item["urgency"],
+            "affected_users": item["affected_users"],
+            "priority": item["priority"],
+            "status": item["status"],
+            "assigned_to": item["assigned_to"],
+        }
+        for item in new_tickets
+    ]
+
+    created_ticket: BaseTicket = create_ticket(
+        typed_tickets,
         title,
         category,
         urgency,
         affected_users,
     )
 
+    # Use the newly created ticket as a normal dictionary.
+    ticket: Ticket = dict(created_ticket)
+    new_tickets.append(ticket)
+
     now = now.astimezone(timezone.utc)
 
     ticket["created_at"] = now.isoformat()
     ticket["updated_at"] = now.isoformat()
-    ticket["due_at"] = calculate_due_at(ticket["priority"], now)
+    ticket["due_at"] = calculate_due_at(
+        ticket["priority"],
+        now,
+    )
     ticket["escalation_cycle"] = 0
 
     record_event(
@@ -95,14 +122,12 @@ def create_ticket_service(
         now=now,
     )
 
-    # Allow test code to inject a temporary storage function.
-    if save_func is None:
-        save_func = save_data
+    persistence: SaveFunction = (
+        save_data if save_func is None else save_func
+    )
 
-    # If saving fails, the original lists remain unchanged.
-    save_func(new_tickets, new_events)
+    persistence(new_tickets, new_events)
 
-    # Commit successful changes to the live application state.
     tickets[:] = new_tickets
     events[:] = new_events
 

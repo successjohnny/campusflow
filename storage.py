@@ -4,7 +4,7 @@
 import json
 import os
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, TypeAlias
 
@@ -55,10 +55,12 @@ def validate_timestamp(value: str) -> datetime:
     except ValueError as error:
         raise ValueError("Invalid ISO-8601 timestamp") from error
 
-    if parsed.tzinfo is None or parsed.utcoffset() is None:
+    offset: timedelta | None = parsed.utcoffset()
+
+    if parsed.tzinfo is None or offset is None:
         raise ValueError("Timestamp must include a timezone")
 
-    if parsed.utcoffset().total_seconds() != 0:
+    if offset.total_seconds() != 0:
         raise ValueError("Timestamp must be in UTC")
 
     return parsed.astimezone(timezone.utc)

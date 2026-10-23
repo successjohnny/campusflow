@@ -1,3 +1,4 @@
+
 """Reporting and ticket queues for CampusFlow Pro."""
 
 from datetime import datetime, timezone
@@ -195,17 +196,17 @@ def generate_enhanced_report(
         if status == "resolved":
             resolved_count += 1
 
-            resolved_at = latest_resolutions.get(
-                ticket["id"]
+            latest_resolved_at: datetime | None = (
+                latest_resolutions.get(ticket["id"])
             )
 
-            if resolved_at is not None:
+            if latest_resolved_at is not None:
                 created_at: datetime = _utc_datetime(
                     ticket["created_at"],
                     "created_at",
                 )
 
-                duration = resolved_at - created_at
+                duration = latest_resolved_at - created_at
 
                 if duration.total_seconds() < 0:
                     raise ValueError(

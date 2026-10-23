@@ -149,7 +149,7 @@ def escalate_overdue(
             already += 1
             continue
 
-        event: Event = {
+        new_event: Event = {
             "event_id": str(uuid4()),
             "ticket_id": ticket_id,
             "event_type": "ESCALATE",
@@ -163,7 +163,7 @@ def escalate_overdue(
             },
         }
 
-        pending.append(event)
+        pending.append(new_event)
         escalated_cycles.add(key)
 
     # Append only after the complete validation succeeds.

@@ -8,13 +8,15 @@ from storage import load_data, save_data
 from campusflow.audit import get_ticket_history
 from campusflow.knowledge_lab import run_quiz
 from campusflow.reports import (
+    EnhancedReport,
+    StandardReport,
     generate_enhanced_report,
     generate_report,
     get_priority_queue,
     get_sla_attention_queue,
 )
-from campusflow.sla import escalate_overdue, is_overdue
-from campusflow.ticket_service import create_ticket_service
+from campusflow.sla import EscalationResult, escalate_overdue, is_overdue
+from campusflow.ticket_service import CreateTicketResult, create_ticket_service
 from campusflow.workflow_service import assign_ticket_service, change_status_service
 
 Ticket: TypeAlias = dict[str, Any]
@@ -50,7 +52,7 @@ def create_ticket_menu(tickets: Tickets, events: Events) -> None:
     try:
         affected_users: int = int(input("Affected users: "))
         actor: str = input("Created by (operator label): ").strip()
-        result: dict[str, Any] = create_ticket_service(
+        result: CreateTicketResult = create_ticket_service(
             tickets=tickets,
             events=events,
             title=title,
@@ -77,7 +79,10 @@ def create_ticket_menu(tickets: Tickets, events: Events) -> None:
                 actor=actor,
                 confirm_duplicate=True,
             )
-        ticket: Ticket = result["ticket"]
+        ticket = result["ticket"]
+        if ticket is None:
+            print("Ticket creation did not return a ticket.")
+            return
         print(f"\nTicket {ticket['id']} created successfully!")
         print(f"Priority: {ticket['priority']}")
         print(f"SLA Deadline: {ticket['due_at']}")
@@ -226,7 +231,7 @@ def escalation_menu(tickets: Tickets, events: Events) -> None:
     now: datetime = datetime.now(timezone.utc)
     working_events: Events = deepcopy(events)
     try:
-        result: dict[str, int] = escalate_overdue(
+        result: EscalationResult = escalate_overdue(
             tickets, working_events, now, actor
         )
         if result["newly_escalated"]:
@@ -242,7 +247,7 @@ def escalation_menu(tickets: Tickets, events: Events) -> None:
 def reports_menu(tickets: Tickets, events: Events) -> None:
     """Show original analytics plus SLA and escalation metrics."""
     print("\n--- CAMPUSFLOW REPORT ---")
-    report: dict[str, Any] = generate_report(tickets)
+    report: StandardReport = generate_report(tickets)
     print(f"Total Tickets: {report['total']}")
     print("\nTickets by Status:")
     for status, count in report["by_status"].items():
@@ -252,7 +257,7 @@ def reports_menu(tickets: Tickets, events: Events) -> None:
         print(f"  {priority}: {count}")
 
     now: datetime = datetime.now(timezone.utc)
-    enhanced: dict[str, Any] = generate_enhanced_report(tickets, events, now)
+    enhanced: EnhancedReport = generate_enhanced_report(tickets, events, now)
     print("\nSLA Metrics:")
     print(f"  Overdue unresolved: {enhanced['overdue_total']}")
     print(f"  Resolution rate: {enhanced['resolution_rate_percent']}%")

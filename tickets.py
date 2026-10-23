@@ -1,5 +1,7 @@
 
-from typing import TypedDict
+"""Ticket creation and priority calculation for CampusFlow."""
+
+from typing import NotRequired, TypedDict
 
 
 class Ticket(TypedDict):
@@ -11,6 +13,12 @@ class Ticket(TypedDict):
     priority: str
     status: str
     assigned_to: str | None
+
+    # CampusFlow Pro fields, added after initial creation.
+    created_at: NotRequired[str]
+    updated_at: NotRequired[str]
+    due_at: NotRequired[str]
+    escalation_cycle: NotRequired[int]
 
 
 VALID_CATEGORIES: tuple[str, ...] = (
