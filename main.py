@@ -1,10 +1,9 @@
 """CampusFlow Pro command-line interface."""
 
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, TypeAlias
 
-from storage import load_data, save_data
 from campusflow.audit import get_ticket_history
 from campusflow.knowledge_lab import run_quiz
 from campusflow.reports import (
@@ -18,6 +17,7 @@ from campusflow.reports import (
 from campusflow.sla import EscalationResult, escalate_overdue, is_overdue
 from campusflow.ticket_service import CreateTicketResult, create_ticket_service
 from campusflow.workflow_service import assign_ticket_service, change_status_service
+from storage import load_data, save_data
 
 Ticket: TypeAlias = dict[str, Any]
 Event: TypeAlias = dict[str, Any]
@@ -191,7 +191,7 @@ def priority_queue_menu(tickets: Tickets) -> None:
 def sla_attention_menu(tickets: Tickets) -> None:
     """Show unresolved tickets, overdue first, then nearest deadline."""
     print("\n--- SLA ATTENTION QUEUE ---")
-    now: datetime = datetime.now(timezone.utc)
+    now: datetime = datetime.now(UTC)
     queue: Tickets = get_sla_attention_queue(tickets, now)
     if not queue:
         print("No unresolved tickets.")
@@ -228,7 +228,7 @@ def escalation_menu(tickets: Tickets, events: Events) -> None:
     """Check overdue tickets and persist new events before committing them."""
     print("\n--- CHECK AND ESCALATE OVERDUE ---")
     actor: str = input("Checked by (operator label): ").strip()
-    now: datetime = datetime.now(timezone.utc)
+    now: datetime = datetime.now(UTC)
     working_events: Events = deepcopy(events)
     try:
         result: EscalationResult = escalate_overdue(
@@ -256,7 +256,7 @@ def reports_menu(tickets: Tickets, events: Events) -> None:
     for priority, count in report["by_priority"].items():
         print(f"  {priority}: {count}")
 
-    now: datetime = datetime.now(timezone.utc)
+    now: datetime = datetime.now(UTC)
     enhanced: EnhancedReport = generate_enhanced_report(tickets, events, now)
     print("\nSLA Metrics:")
     print(f"  Overdue unresolved: {enhanced['overdue_total']}")

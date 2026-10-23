@@ -1,9 +1,8 @@
 
 """Reporting and ticket queues for CampusFlow Pro."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, TypeAlias, TypedDict
-
 
 Ticket: TypeAlias = dict[str, Any]
 Event: TypeAlias = dict[str, Any]
@@ -63,7 +62,7 @@ def _utc_datetime(value: datetime | str, name: str) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{name} must be timezone-aware")
 
-    return value.astimezone(timezone.utc)
+    return value.astimezone(UTC)
 
 
 def get_sla_attention_queue(

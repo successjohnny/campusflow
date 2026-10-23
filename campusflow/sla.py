@@ -1,10 +1,9 @@
 
 """SLA deadline calculations and escalation for CampusFlow Pro."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any, TypedDict
 from uuid import uuid4
-
 
 Ticket = dict[str, Any]
 Event = dict[str, Any]
@@ -34,7 +33,7 @@ def require_aware_datetime(
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{name} must be timezone-aware")
 
-    return value.astimezone(timezone.utc)
+    return value.astimezone(UTC)
 
 
 def calculate_due_at(

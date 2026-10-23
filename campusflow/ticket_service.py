@@ -3,17 +3,15 @@
 
 from collections.abc import Callable
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, TypedDict
-
-from tickets import Ticket as BaseTicket
-from tickets import create_ticket
-from storage import save_data
 
 from campusflow.audit import record_event
 from campusflow.duplicates import detect_duplicates
 from campusflow.sla import calculate_due_at
-
+from storage import save_data
+from tickets import Ticket as BaseTicket
+from tickets import create_ticket
 
 Ticket = dict[str, Any]
 Event = dict[str, Any]
@@ -43,7 +41,7 @@ def create_ticket_service(
     """Create a ticket with SLA, audit logging, and safe persistence."""
 
     if now is None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
     if not isinstance(now, datetime):
         raise TypeError("now must be a datetime")
@@ -101,7 +99,7 @@ def create_ticket_service(
     ticket: Ticket = dict(created_ticket)
     new_tickets.append(ticket)
 
-    now = now.astimezone(timezone.utc)
+    now = now.astimezone(UTC)
 
     ticket["created_at"] = now.isoformat()
     ticket["updated_at"] = now.isoformat()

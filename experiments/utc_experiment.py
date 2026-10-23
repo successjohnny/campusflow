@@ -1,5 +1,5 @@
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 
 def main() -> None:
@@ -7,7 +7,7 @@ def main() -> None:
 
     # Create a fixed UTC timestamp
     created_at: datetime = datetime(
-        2026, 10, 14, 10, 0, tzinfo=timezone.utc
+        2026, 10, 14, 10, 0, tzinfo=UTC
     )
 
     # A critical ticket has a 60-minute SLA

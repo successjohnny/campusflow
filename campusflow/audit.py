@@ -1,9 +1,8 @@
 """Audit event recording and ticket history for CampusFlow Pro."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, TypeAlias
 from uuid import uuid4
-
 
 Event: TypeAlias = dict[str, Any]
 Events: TypeAlias = list[Event]
@@ -64,7 +63,7 @@ def record_event(
         raise ValueError("Event details must be a dictionary")
 
     if now is None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
     if not isinstance(now, datetime):
         raise TypeError("Timestamp must be a datetime")
@@ -72,7 +71,7 @@ def record_event(
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("Timestamp must be timezone-aware")
 
-    timestamp: str = now.astimezone(timezone.utc).isoformat()
+    timestamp: str = now.astimezone(UTC).isoformat()
 
     event: Event = {
         "event_id": str(uuid4()),

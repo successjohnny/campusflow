@@ -2,9 +2,10 @@
 """Interactive Knowledge Lab with persistent quiz sessions."""
 
 import json
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable, TypedDict
+from typing import Any, TypedDict
 from uuid import uuid4
 
 
@@ -225,11 +226,11 @@ def save_quiz_session(
     if result != expected:
         raise ValueError("Quiz result does not match the answers")
 
-    timestamp = now or datetime.now(timezone.utc)
+    timestamp = now or datetime.now(UTC)
     if timestamp.tzinfo is None or timestamp.utcoffset() is None:
         raise ValueError("Session timestamp must include a timezone")
 
-    timestamp = timestamp.astimezone(timezone.utc)
+    timestamp = timestamp.astimezone(UTC)
     session_id = uuid4().hex
 
     session = {

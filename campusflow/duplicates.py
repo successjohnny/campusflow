@@ -2,7 +2,6 @@
 
 from typing import Any, TypeAlias
 
-
 Ticket: TypeAlias = dict[str, Any]
 
 
