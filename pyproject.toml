@@ -1,0 +1,11 @@
+
+[tool.mypy]
+python_version = "3.12"
+files = [
+    "campusflow",
+    "main.py",
+    "storage.py",
+    "tickets.py",
+]
+show_error_codes = true
+warn_unused_configs = true
