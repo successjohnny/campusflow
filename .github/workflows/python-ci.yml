@@ -1,4 +1,3 @@
-
 name: CampusFlow Python CI
 
 on:
@@ -7,7 +6,7 @@ on:
 
 jobs:
   quality-checks:
-    name: Type Checking and Unit Tests
+    name: Ruff, Type Checking and Unit Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -19,10 +18,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install mypy
+      - name: Install quality tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install mypy==2.4.0
+          python -m pip install mypy==2.4.0 ruff
+
+      - name: Run Ruff linting
+        run: python -m ruff check .
 
       - name: Run static type checking
         run: python -m mypy
